@@ -6,10 +6,14 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using SocialNetworksManager.Contracts;
+using System.Reflection;
 
 namespace SocialNetworksManager
 {
-    public partial class MainWindow : Window
+    delegate void lol();
+
+    [Export(typeof(IApplicationContract))]
+    public partial class MainWindow : Window, IApplicationContract
     {
         private DirectoryCatalog directoryCatalog;
         private CompositionContainer compositionContainer;
@@ -20,6 +24,8 @@ namespace SocialNetworksManager
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
+
+            but_refreshExtensions.Click += But_refreshExtensions_Click;
         }
 
         private void InitializeContainer()
@@ -51,7 +57,7 @@ namespace SocialNetworksManager
                 MessageBox.Show(e.Status,"Import");
             };
 
-            compositionContainer.ComposeParts(importManager);
+            compositionContainer.ComposeParts(this,importManager);
         }
 
         private void RefreshExtensions()
@@ -71,16 +77,59 @@ namespace SocialNetworksManager
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        public void setTextBoxValue(string value)
+        {
+            text_output.Text = value;
+        }
+
+        private void But_refreshExtensions_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshExtensions();
+        }
+
+        private ISocialNetworksManagerExtension findSocialNetworkExtensionByName(String name)
         {
             foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
-                if (extension.Value.getSocialNetworkName().Equals(((Button)sender).Content))
+                if(extension.Value.getSocialNetworkName().Equals(name))
                 {
-                    MessageBox.Show(extension.Value.getExtensionName());
-                    break;
+                    return extension.Value;
                 }
             }
+
+            return null;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            methodsHolder.Children.Clear();
+
+            ISocialNetworksManagerExtension sn = findSocialNetworkExtensionByName(((Button)sender).Content.ToString());
+            sn.Authorization();
+
+            MethodInfo[] info = sn.GetType().GetMethods();
+
+            for (int i = 0; i < info.Length; i++)
+            {
+                Attribute attribute = info[i].GetCustomAttribute(typeof(AvailableInUIAttribute));
+
+                if (attribute != null)
+                {
+                    Button button = new Button();
+                    if (((AvailableInUIAttribute)attribute).UIName == null) button.Content = info[i].Name;
+                    else button.Content = ((AvailableInUIAttribute)attribute).UIName;
+                    //button.Click += каким-то образом получить ссылку на метод
+                    methodsHolder.Children.Add(button);
+                }
+            }
+        }
+
+        public String openAuthWindow(String authpage)
+        {
+            AuthWindow authWindow = new AuthWindow(authpage);
+            authWindow.ShowDialog();
+
+            return authWindow.access_token;
         }
     }
 }

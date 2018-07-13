@@ -5,12 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SocialNetworksManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="500" WindowState="Maximized">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Right">
-            <Label>Social Networks</Label>
-            <StackPanel x:Name="socialNetworksHolder"></StackPanel>
-        </StackPanel>
-        <Canvas></Canvas>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Settings">
+                <MenuItem x:Name="but_refreshExtensions" Header="Refresh Extensions"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
+        <StackPanel x:Name="methodsHolder" DockPanel.Dock="Right" Margin="5" Width="100"></StackPanel>
+        <TextBox x:Name="text_output" Margin="5" MaxLength="1000"/>
     </DockPanel>
 </Window>
