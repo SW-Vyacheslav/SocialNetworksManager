@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.ComponentModel.Composition;
 using SocialNetworksManager.Contracts;
-using System.Net;
+using System.ComponentModel.Composition;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using mshtml;
 
-namespace VKExtension
+namespace FacebookExtension
 {
-    //Расширение для вконтакте
     [Export(typeof(ISocialNetworksManagerExtension))]
-    public class VKExtension : ISocialNetworksManagerExtension
+    public class FacebookExtension : ISocialNetworksManagerExtension
     {
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
         private IApplicationContract applicationContract;
@@ -22,30 +21,28 @@ namespace VKExtension
 
         private String auth_link;
 
-        private String app_id = "6629531";
-        private String scope = "friends";
+        private String app_id = "203282280378025";
+        private String scope = "user_friends";
+        private String redirect_uri = "https://www.facebook.com/connect/login_success.html";
 
-        private WebClient client;
         private WebBrowser webBrowser;
 
         private bool isAuthorized = false;
 
-        public VKExtension()
+        public FacebookExtension()
         {
-            client = new WebClient();
-
-            auth_link = "https://oauth.vk.com/authorize?client_id=" + app_id + "&display=page&redirect_uri=&scope=" + scope + "&response_type=token&v=5.80";
+            auth_link = "https://facebook.com/v3.0/dialog/oauth?response_type=token&display=popup&client_id=" + app_id + "&redirect_uri=" + redirect_uri + "&scope=" + scope;
         }
 
         #region InfoAboutSocialNetwork
         public string getExtensionName()
         {
-            return "VK_Extension";
+            return "Facebook_Extension";
         }
 
         public string getSocialNetworkName()
         {
-            return "VK";
+            return "Facebook";
         }
         #endregion
 
@@ -53,7 +50,7 @@ namespace VKExtension
         {
             if (isAuthorized)
             {
-                applicationContract.setTextBoxValue("You are authorized in VK.");
+                applicationContract.setTextBoxValue("You are authorized in Facebook.");
                 return;
             }
             webBrowser = applicationContract.GetWebBrowser();
@@ -62,7 +59,7 @@ namespace VKExtension
             webBrowser.Navigate(auth_link);
         }
 
-        private void WebBrowser_LoadCompleted(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        private void WebBrowser_LoadCompleted(object sender, NavigationEventArgs e)
         {
             HTMLDocument document = (HTMLDocument)webBrowser.Document;
 

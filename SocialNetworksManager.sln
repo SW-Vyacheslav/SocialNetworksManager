@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialNetworksManagerContra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKExtension", "VKExtension\VKExtension.csproj", "{BDE04C6D-6CEE-4FAF-96CB-B9DE07B96C57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FacebookExtension", "FacebookExtension\FacebookExtension.csproj", "{46D57B90-6F55-4F4C-8B16-15C847A5E1EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{BDE04C6D-6CEE-4FAF-96CB-B9DE07B96C57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDE04C6D-6CEE-4FAF-96CB-B9DE07B96C57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDE04C6D-6CEE-4FAF-96CB-B9DE07B96C57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46D57B90-6F55-4F4C-8B16-15C847A5E1EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46D57B90-6F55-4F4C-8B16-15C847A5E1EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46D57B90-6F55-4F4C-8B16-15C847A5E1EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46D57B90-6F55-4F4C-8B16-15C847A5E1EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

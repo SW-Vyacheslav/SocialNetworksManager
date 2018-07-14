@@ -6,12 +6,9 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using SocialNetworksManager.Contracts;
-using System.Reflection;
 
 namespace SocialNetworksManager
 {
-    delegate void lol();
-
     [Export(typeof(IApplicationContract))]
     public partial class MainWindow : Window, IApplicationContract
     {
@@ -19,11 +16,17 @@ namespace SocialNetworksManager
         private CompositionContainer compositionContainer;
         private ImportManager importManager;
 
+        private WebBrowser browser;
+
         public MainWindow()
         {
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
+
+            browser = new WebBrowser();
+            browserHolder.Children.Add(browser);
+            browser.Navigate("https://www.tut.by");
 
             but_refreshExtensions.Click += But_refreshExtensions_Click;
         }
@@ -52,12 +55,12 @@ namespace SocialNetworksManager
             compositionContainer = new CompositionContainer(directoryCatalog);
             importManager = new ImportManager();
 
-            importManager.ImportSatisfied += (sender, e) => 
+            importManager.ImportSatisfied += (sender, e) =>
             {
-                MessageBox.Show(e.Status,"Import");
+                MessageBox.Show(e.Status, "Import");
             };
 
-            compositionContainer.ComposeParts(this,importManager);
+            compositionContainer.ComposeParts(this, importManager);
         }
 
         private void RefreshExtensions()
@@ -67,7 +70,7 @@ namespace SocialNetworksManager
 
             socialNetworksHolder.Children.Clear();
 
-            foreach(Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
                 Button button = new Button();
                 button.Content = extension.Value.getSocialNetworkName();
@@ -91,7 +94,7 @@ namespace SocialNetworksManager
         {
             foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
-                if(extension.Value.getSocialNetworkName().Equals(name))
+                if (extension.Value.getSocialNetworkName().Equals(name))
                 {
                     return extension.Value;
                 }
@@ -102,34 +105,17 @@ namespace SocialNetworksManager
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            methodsHolder.Children.Clear();
-
-            ISocialNetworksManagerExtension sn = findSocialNetworkExtensionByName(((Button)sender).Content.ToString());
-            sn.Authorization();
-
-            MethodInfo[] info = sn.GetType().GetMethods();
-
-            for (int i = 0; i < info.Length; i++)
-            {
-                Attribute attribute = info[i].GetCustomAttribute(typeof(AvailableInUIAttribute));
-
-                if (attribute != null)
-                {
-                    Button button = new Button();
-                    if (((AvailableInUIAttribute)attribute).UIName == null) button.Content = info[i].Name;
-                    else button.Content = ((AvailableInUIAttribute)attribute).UIName;
-                    //button.Click += каким-то образом получить ссылку на метод
-                    methodsHolder.Children.Add(button);
-                }
-            }
+            findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
         }
 
-        public String openAuthWindow(String authpage)
+        public WebBrowser GetWebBrowser()
         {
-            AuthWindow authWindow = new AuthWindow(authpage);
-            authWindow.ShowDialog();
+            browserHolder.Children.Remove(browser);
+            browser.Dispose();
+            browser = new WebBrowser();
+            browserHolder.Children.Add(browser);
 
-            return authWindow.access_token;
+            return browser;
         }
     }
 }
