@@ -11,10 +11,14 @@
             <MenuItem Header="Settings">
                 <MenuItem x:Name="but_refreshExtensions" Header="Refresh Extensions"></MenuItem>
             </MenuItem>
+            <MenuItem Header="Methods">
+                <MenuItem x:Name="but_getvkFriends" Header="VK Friends"></MenuItem>
+                <MenuItem x:Name="but_getfbFriends" Header="Facebook Friends"></MenuItem>
+            </MenuItem>
         </Menu>
         <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
-        <DockPanel x:Name="browserHolder">
-            <TextBox DockPanel.Dock="Top" x:Name="text_output" Margin="5" MaxLength="1000"/>
+        <DockPanel x:Name="controlHolder">
+            <TextBox DockPanel.Dock="Top" x:Name="text_output" Margin="5" MaxLength="1000" IsReadOnly="True"/>
         </DockPanel>
     </DockPanel>
 </Window>

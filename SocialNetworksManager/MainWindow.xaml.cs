@@ -6,17 +6,18 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using SocialNetworksManager.Contracts;
+using System.Text;
 
 namespace SocialNetworksManager
 {
     [Export(typeof(IApplicationContract))]
     public partial class MainWindow : Window, IApplicationContract
     {
-        private DirectoryCatalog directoryCatalog;
-        private CompositionContainer compositionContainer;
-        private ImportManager importManager;
+        private DirectoryCatalog directoryCatalog = null;
+        private CompositionContainer compositionContainer = null;
+        private ImportManager importManager = null;
 
-        private WebBrowser browser;
+        private WebBrowser browser = null;
 
         public MainWindow()
         {
@@ -24,13 +25,12 @@ namespace SocialNetworksManager
             InitializeContainer();
             RefreshExtensions();
 
-            browser = new WebBrowser();
-            browserHolder.Children.Add(browser);
-            browser.Navigate("https://www.tut.by");
-
             but_refreshExtensions.Click += But_refreshExtensions_Click;
+            but_getvkFriends.Click += But_getvkFriends_Click;
+            but_getfbFriends.Click += But_getfbFriends_Click;
         }
 
+        #region UsualMethods
         private void InitializeContainer()
         {
             String dirPath = Environment.CurrentDirectory + "\\Extensions";
@@ -55,11 +55,6 @@ namespace SocialNetworksManager
             compositionContainer = new CompositionContainer(directoryCatalog);
             importManager = new ImportManager();
 
-            importManager.ImportSatisfied += (sender, e) =>
-            {
-                MessageBox.Show(e.Status, "Import");
-            };
-
             compositionContainer.ComposeParts(this, importManager);
         }
 
@@ -74,20 +69,9 @@ namespace SocialNetworksManager
             {
                 Button button = new Button();
                 button.Content = extension.Value.getSocialNetworkName();
-                button.BorderBrush = new SolidColorBrush(Colors.Black);
                 button.Click += Button_Click;
                 socialNetworksHolder.Children.Add(button);
             }
-        }
-
-        public void setTextBoxValue(string value)
-        {
-            text_output.Text = value;
-        }
-
-        private void But_refreshExtensions_Click(object sender, RoutedEventArgs e)
-        {
-            RefreshExtensions();
         }
 
         private ISocialNetworksManagerExtension findSocialNetworkExtensionByName(String name)
@@ -102,20 +86,50 @@ namespace SocialNetworksManager
 
             return null;
         }
+        #endregion
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        #region ContractMethods
+        public void setTextBoxValue(string value)
         {
-            findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
+            text_output.Text = value;
         }
 
         public WebBrowser GetWebBrowser()
         {
-            browserHolder.Children.Remove(browser);
-            browser.Dispose();
+            if (browser != null)
+            {
+                controlHolder.Children.Remove(browser);
+                browser.Dispose();
+            }
             browser = new WebBrowser();
-            browserHolder.Children.Add(browser);
+            controlHolder.Children.Add(browser);
 
             return browser;
         }
+        #endregion
+
+        #region EventMethods
+        private void But_refreshExtensions_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshExtensions();
+        }
+
+        private void But_getvkFriends_Click(object sender, RoutedEventArgs e)
+        {
+            findSocialNetworkExtensionByName("VK").GetFriends();
+        }
+
+        private void But_getfbFriends_Click(object sender, RoutedEventArgs e)
+        {
+            findSocialNetworkExtensionByName("Facebook").GetFriends();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ((Button)sender).IsEnabled = false;
+            findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
+            ((Button)sender).IsEnabled = true;
+        }
+        #endregion
     }
 }

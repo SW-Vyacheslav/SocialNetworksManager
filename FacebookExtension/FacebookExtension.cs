@@ -8,6 +8,10 @@ using System.ComponentModel.Composition;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using mshtml;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Net;
 
 namespace FacebookExtension
 {
@@ -18,6 +22,7 @@ namespace FacebookExtension
         private IApplicationContract applicationContract;
 
         private String access_token;
+        private String user_id;
 
         private String auth_link;
 
@@ -26,11 +31,14 @@ namespace FacebookExtension
         private String redirect_uri = "https://www.facebook.com/connect/login_success.html";
 
         private WebBrowser webBrowser;
+        private WebClient client;
 
-        private bool isAuthorized = false;
+        public bool IsAuthorized { get; private set; }
 
         public FacebookExtension()
         {
+            client = new WebClient();
+
             auth_link = "https://facebook.com/v3.0/dialog/oauth?response_type=token&display=popup&client_id=" + app_id + "&redirect_uri=" + redirect_uri + "&scope=" + scope;
         }
 
@@ -48,14 +56,13 @@ namespace FacebookExtension
 
         public void Authorization()
         {
-            if (isAuthorized)
+            if (IsAuthorized)
             {
                 applicationContract.setTextBoxValue("You are authorized in Facebook.");
                 return;
             }
             webBrowser = applicationContract.GetWebBrowser();
             webBrowser.LoadCompleted += WebBrowser_LoadCompleted;
-            webBrowser.Visibility = System.Windows.Visibility.Visible;
             webBrowser.Navigate(auth_link);
         }
 
@@ -63,13 +70,57 @@ namespace FacebookExtension
         {
             HTMLDocument document = (HTMLDocument)webBrowser.Document;
 
-            if (document.url.Contains("access_token"))
+            if (document.url.Contains("https://www.facebook.com/connect/login_success.html"))
             {
-                webBrowser.Visibility = System.Windows.Visibility.Hidden;
-                access_token = document.url.Substring(document.url.IndexOf('=') + 1, document.url.IndexOf('&') - (document.url.IndexOf('=') + 1));
-                applicationContract.setTextBoxValue(String.Format("Access_token:{0}\nURL:{1}", access_token, document.url));
-                isAuthorized = true;
+                webBrowser.IsEnabled = false;
+                webBrowser.Visibility = System.Windows.Visibility.Collapsed;
+
+                Regex fieldsPattern = new Regex(@"\w+=\w+");
+                MatchCollection matches = fieldsPattern.Matches(document.url);
+
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    String[] field = matches[i].Value.Split('=');
+
+                    switch(field[0])
+                    {
+                        case "access_token":
+                            access_token = field[1];
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                dynamic json = JObject.Parse(client.DownloadString("https://graph.facebook.com/v3.0/me?fields=id&access_token="+access_token));
+                user_id = (String)json.id;
+                IsAuthorized = true;
+                applicationContract.setTextBoxValue("You are authorized in Facebook.");
             }
+        }
+
+        public void GetFriends()
+        {
+            if (!IsAuthorized) return;
+
+            dynamic json = JObject.Parse(client.DownloadString("https://graph.facebook.com/v3.0/" + user_id + "/friends?access_token=" + access_token));
+
+            if ((int)json.summary.total_count == 0)
+            {
+                applicationContract.setTextBoxValue("You don't have friends.");
+                return;
+            }
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < (int)json.summary.total_count; i++)
+            {
+                builder.AppendFormat("ID:{0}\n" +
+                                     "Name:{1}\n\n",
+                                     (String)json.data[i].id,
+                                     (String)json.data[i].name);
+            }
+
+            applicationContract.setTextBoxValue(builder.ToString());
         }
     }
 }

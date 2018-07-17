@@ -8,6 +8,9 @@ using SocialNetworksManager.Contracts;
 using System.Net;
 using System.Windows.Controls;
 using mshtml;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace VKExtension
 {
@@ -19,6 +22,7 @@ namespace VKExtension
         private IApplicationContract applicationContract;
 
         private String access_token;
+        private String user_id;
 
         private String auth_link;
 
@@ -28,11 +32,13 @@ namespace VKExtension
         private WebClient client;
         private WebBrowser webBrowser;
 
-        private bool isAuthorized = false;
+        public bool IsAuthorized { get; private set; }
 
         public VKExtension()
         {
             client = new WebClient();
+
+            IsAuthorized = false;
 
             auth_link = "https://oauth.vk.com/authorize?client_id=" + app_id + "&display=page&redirect_uri=&scope=" + scope + "&response_type=token&v=5.80";
         }
@@ -51,14 +57,13 @@ namespace VKExtension
 
         public void Authorization()
         {
-            if (isAuthorized)
+            if (IsAuthorized)
             {
                 applicationContract.setTextBoxValue("You are authorized in VK.");
                 return;
             }
             webBrowser = applicationContract.GetWebBrowser();
             webBrowser.LoadCompleted += WebBrowser_LoadCompleted;
-            webBrowser.Visibility = System.Windows.Visibility.Visible;
             webBrowser.Navigate(auth_link);
         }
 
@@ -66,13 +71,65 @@ namespace VKExtension
         {
             HTMLDocument document = (HTMLDocument)webBrowser.Document;
 
-            if (document.url.Contains("access_token"))
+            if (document.url.Contains("https://oauth.vk.com/blank.html"))
             {
-                webBrowser.Visibility = System.Windows.Visibility.Hidden;
-                access_token = document.url.Substring(document.url.IndexOf('=') + 1, document.url.IndexOf('&') - (document.url.IndexOf('=') + 1));
-                applicationContract.setTextBoxValue(String.Format("Access_token:{0}\nURL:{1}", access_token, document.url));
-                isAuthorized = true;
+                webBrowser.IsEnabled = false;
+                webBrowser.Visibility = System.Windows.Visibility.Collapsed;
+
+                Regex fieldsPattern = new Regex(@"\w+=\w+");
+                MatchCollection matches = fieldsPattern.Matches(document.url);
+                    
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    String[] field = matches[i].Value.Split('=');
+
+                    switch (field[0])
+                    {
+                        case "user_id":
+                            user_id = field[1];
+                            break;
+                        case "access_token":
+                            access_token = field[1];
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                IsAuthorized = true;
+                applicationContract.setTextBoxValue("You are authorized in VK.");
             }
+        }
+
+        private String UTF8ToWindows1251(String source)
+        {
+            Encoding utf8 = Encoding.GetEncoding("UTF-8");
+            Encoding win1251 = Encoding.GetEncoding("Windows-1251");
+
+            byte[] utf8Bytes = win1251.GetBytes(source);
+            byte[] win1251Bytes = Encoding.Convert(utf8, win1251, utf8Bytes);
+
+            return win1251.GetString(win1251Bytes);
+        }
+
+        public void GetFriends()
+        {
+            if (!IsAuthorized) return;
+            dynamic json = JObject.Parse(client.DownloadString("https://api.vk.com/method/friends.get?order=name&count=100&fields=all&v=5.80&access_token=" + access_token));
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < (int)json.response.count; i++)
+            {
+                builder.AppendFormat("ID: {0}\n" +
+                                     "First_Name: {1}\n" +
+                                     "Last_Name: {2}\n" +
+                                     "Status: {3}\n\n",
+                                     (String)json.response.items[i].id,
+                                     UTF8ToWindows1251((String)json.response.items[i].first_name),
+                                     UTF8ToWindows1251((String)json.response.items[i].last_name),
+                                     (String)json.response.items[i].online != "0" ? "Online" : "Offline");
+            }
+
+            applicationContract.setTextBoxValue(builder.ToString());
         }
     }
 }
