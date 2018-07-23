@@ -7,17 +7,16 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using SocialNetworksManager.Contracts;
 using System.Text;
+using System.Collections.Generic;
 
 namespace SocialNetworksManager
 {
     [Export(typeof(IApplicationContract))]
     public partial class MainWindow : Window, IApplicationContract
     {
-        private DirectoryCatalog directoryCatalog = null;
+        private DirectoryCatalog     directoryCatalog     = null;
         private CompositionContainer compositionContainer = null;
-        private ImportManager importManager = null;
-
-        private WebBrowser browser = null;
+        private ImportManager        importManager        = null;
 
         public MainWindow()
         {
@@ -26,8 +25,8 @@ namespace SocialNetworksManager
             RefreshExtensions();
 
             but_refreshExtensions.Click += But_refreshExtensions_Click;
-            but_getvkFriends.Click += But_getvkFriends_Click;
-            but_getfbFriends.Click += But_getfbFriends_Click;
+            but_getvkFriends.Click      += But_getvkFriends_Click;
+            but_getfbFriends.Click      += But_getfbFriends_Click;
         }
 
         #region UsualMethods
@@ -41,19 +40,15 @@ namespace SocialNetworksManager
                 MessageBox.Show("Extensions directory does not exists.\nExtensions did not loaded.");
                 return;
             }
-            else
+            if (Directory.GetFiles(dirPath).Length == 0)
             {
-                String[] files = Directory.GetFiles(dirPath);
-                if (files.Length == 0)
-                {
-                    MessageBox.Show("There are no extensions.");
-                    return;
-                }
+                MessageBox.Show("There are no extensions.");
+                return;
             }
 
-            directoryCatalog = new DirectoryCatalog(dirPath);
-            compositionContainer = new CompositionContainer(directoryCatalog);
-            importManager = new ImportManager();
+            directoryCatalog     =  new DirectoryCatalog(dirPath);
+            compositionContainer =  new CompositionContainer(directoryCatalog);
+            importManager        =  new ImportManager();
 
             compositionContainer.ComposeParts(this, importManager);
         }
@@ -62,14 +57,14 @@ namespace SocialNetworksManager
         {
             if (directoryCatalog == null) return;
             directoryCatalog.Refresh();
-
             socialNetworksHolder.Children.Clear();
 
             foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
-                Button button = new Button();
-                button.Content = extension.Value.getSocialNetworkName();
-                button.Click += Button_Click;
+                Button button   =  new Button();
+                button.Content  =  extension.Value.getSocialNetworkName();
+                button.Click   +=  Button_Click;
+
                 socialNetworksHolder.Children.Add(button);
             }
         }
@@ -89,22 +84,14 @@ namespace SocialNetworksManager
         #endregion
 
         #region ContractMethods
-        public void setTextBoxValue(string value)
+        public void setInfoValue(string value)
         {
-            text_output.Text = value;
+            lbl_info.Content = value;
         }
 
-        public WebBrowser GetWebBrowser()
+        public void setFriendsListItemsSource(IEnumerable<object> list)
         {
-            if (browser != null)
-            {
-                controlHolder.Children.Remove(browser);
-                browser.Dispose();
-            }
-            browser = new WebBrowser();
-            controlHolder.Children.Add(browser);
-
-            return browser;
+            friendsList.ItemsSource = list;
         }
         #endregion
 
@@ -126,9 +113,7 @@ namespace SocialNetworksManager
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ((Button)sender).IsEnabled = false;
             findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
-            ((Button)sender).IsEnabled = true;
         }
         #endregion
     }

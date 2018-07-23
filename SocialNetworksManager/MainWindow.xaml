@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SocialNetworksManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="500" WindowState="Maximized">
+        Title="MainWindow" Height="350" Width="500">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Settings">
@@ -18,7 +18,17 @@
         </Menu>
         <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
         <DockPanel x:Name="controlHolder">
-            <TextBox DockPanel.Dock="Top" x:Name="text_output" Margin="5" MaxLength="1000" IsReadOnly="True"/>
+            <Label DockPanel.Dock="Top" x:Name="lbl_info"></Label>
+            <ListView x:Name="friendsList">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Path=ID}"></GridViewColumn>
+                        <GridViewColumn Header="First Name" DisplayMemberBinding="{Binding Path=First_Name}"></GridViewColumn>
+                        <GridViewColumn Header="Last Name" DisplayMemberBinding="{Binding Path=Last_Name}"></GridViewColumn>
+                        <GridViewColumn Header="Online" DisplayMemberBinding="{Binding Path=Online}"></GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </DockPanel>
     </DockPanel>
 </Window>

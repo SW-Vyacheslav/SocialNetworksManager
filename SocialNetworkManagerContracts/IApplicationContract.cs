@@ -9,8 +9,7 @@ namespace SocialNetworksManager.Contracts
 {
     public interface IApplicationContract
     {
-        void setTextBoxValue(String value);
-
-        WebBrowser GetWebBrowser();
+        void setInfoValue(String value);
+        void setFriendsListItemsSource(IEnumerable<object> list);
     }
 }

@@ -21,25 +21,22 @@ namespace FacebookExtension
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
         private IApplicationContract applicationContract;
 
-        private String access_token;
-        private String user_id;
+        private       String     access_token;
+        private       String     user_id;
+        private       String     auth_link;
+        private const String     app_id = "203282280378025";
+        private const String     scope = "user_friends";
+        private const String     redirect_uri = "https://www.facebook.com/connect/login_success.html";
+        private       WebBrowser webBrowser;
+        private       WebClient  client;
 
-        private String auth_link;
-
-        private String app_id = "203282280378025";
-        private String scope = "user_friends";
-        private String redirect_uri = "https://www.facebook.com/connect/login_success.html";
-
-        private WebBrowser webBrowser;
-        private WebClient client;
-
-        public bool IsAuthorized { get; private set; }
+        public  bool IsAuthorized { get; private set; }
 
         public FacebookExtension()
         {
-            client = new WebClient();
-
-            auth_link = "https://facebook.com/v3.0/dialog/oauth?response_type=token&display=popup&client_id=" + app_id + "&redirect_uri=" + redirect_uri + "&scope=" + scope;
+            client       = new WebClient();
+            IsAuthorized = false;
+            auth_link    = "https://facebook.com/v3.0/dialog/oauth?response_type=token&display=popup&client_id=" + app_id + "&redirect_uri=" + redirect_uri + "&scope=" + scope;
         }
 
         #region InfoAboutSocialNetwork
@@ -72,10 +69,10 @@ namespace FacebookExtension
 
             if (document.url.Contains("https://www.facebook.com/connect/login_success.html"))
             {
-                webBrowser.IsEnabled = false;
+                webBrowser.IsEnabled  = false;
                 webBrowser.Visibility = System.Windows.Visibility.Collapsed;
 
-                Regex fieldsPattern = new Regex(@"\w+=\w+");
+                Regex fieldsPattern     = new Regex(@"\w+=\w+");
                 MatchCollection matches = fieldsPattern.Matches(document.url);
 
                 for (int i = 0; i < matches.Count; i++)
@@ -93,7 +90,7 @@ namespace FacebookExtension
                 }
 
                 dynamic json = JObject.Parse(client.DownloadString("https://graph.facebook.com/v3.0/me?fields=id&access_token="+access_token));
-                user_id = (String)json.id;
+                user_id      = (String)json.id;
                 IsAuthorized = true;
                 applicationContract.setTextBoxValue("You are authorized in Facebook.");
             }

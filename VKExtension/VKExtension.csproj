@@ -11,6 +11,8 @@
     <AssemblyName>VKExtension</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,8 +58,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\User.cs" />
+    <Compile Include="VkAuthForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VkAuthForm.Designer.cs">
+      <DependentUpon>VkAuthForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\VkAuthAppAccessRule.cs" />
+    <Compile Include="Requests\VkAuthRequest.cs" />
+    <Compile Include="Responses\VkAuthResponse.cs" />
     <Compile Include="VKExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Abilities\VkMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SocialNetworkManagerContracts\SocialNetworksManagerContracts.csproj">
@@ -66,6 +80,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="VkAuthForm.resx">
+      <DependentUpon>VkAuthForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

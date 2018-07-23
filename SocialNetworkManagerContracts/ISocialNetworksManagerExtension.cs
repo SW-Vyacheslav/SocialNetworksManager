@@ -13,7 +13,7 @@ namespace SocialNetworksManager.Contracts
         String getSocialNetworkName();
 
         void Authorization();
-
         void GetFriends();
+        //void SendMessageToAllFriends();
     }
 }
