@@ -67,7 +67,11 @@ namespace VKExtension
 
             VkAuthForm authForm = new VkAuthForm(request);
             response = authForm.Authorize();
-            if (!response.Error && response != null)
+            if (response == null)
+            {
+                applicationContract.setInfoValue("VkAuth ERROR!");
+            }
+            else if (!response.Error)
             {
                 IsAuthorized = true;
                 applicationContract.setInfoValue("VkAuth OK!");
@@ -79,9 +83,15 @@ namespace VKExtension
         {
             if (!IsAuthorized) return;
 
-            List<User> friends = VkMethods.Friends_Get(null,response).ToList();
+            User[] friends = VkMethods.Friends_Get(null,response);
 
-            applicationContract.setFriendsListItemsSource(friends);
+            if(friends == null)
+            {
+                applicationContract.setInfoValue("Friends list is empty.");
+                return;
+            }
+
+            applicationContract.setFriendsListItemsSource(friends.ToList());
         }
     }
 }
