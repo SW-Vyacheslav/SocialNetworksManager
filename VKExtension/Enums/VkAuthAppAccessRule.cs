@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace VKExtension.Enums
 {
+    [Flags]
     public enum VkAuthAppAccessRule
     {
         All = 140491999,

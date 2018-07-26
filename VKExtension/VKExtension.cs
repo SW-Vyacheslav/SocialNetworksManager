@@ -13,12 +13,8 @@ using SocialNetworksManager.Contracts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using VKExtension.Requests;
-using VKExtension.Responses;
-using VKExtension.Models;
-using VKExtension.Abilities;
-
 using mshtml;
+using System.Windows.Media.Imaging;
 
 namespace VKExtension
 {
@@ -29,7 +25,7 @@ namespace VKExtension
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
         private IApplicationContract applicationContract;
 
-        private VkAuthResponse response;
+        private Responses.VkAuthResponse response;
 
         public bool IsAuthorized { get; private set; }
 
@@ -38,7 +34,6 @@ namespace VKExtension
             IsAuthorized = false;
         }
 
-        #region InfoAboutSocialNetwork
         public string getExtensionName()
         {
             return "VK_Extension";
@@ -48,7 +43,6 @@ namespace VKExtension
         {
             return "VK";
         }
-        #endregion
 
         public void Authorization()
         {
@@ -57,7 +51,7 @@ namespace VKExtension
                 applicationContract.setInfoValue("You are authorized in VK.");
                 return;
             }
-            VkAuthRequest request = new VkAuthRequest()
+            Requests.VkAuthRequest request = new Requests.VkAuthRequest()
             {
                 AppId = "6629531",
                 Version = "5.80",
@@ -83,7 +77,7 @@ namespace VKExtension
         {
             if (!IsAuthorized) return;
 
-            User[] friends = VkMethods.Friends_Get(null,response);
+            Models.VkUser[] friends = Abilities.VkMethods.Friends_Get(null,response);
 
             if(friends == null)
             {
@@ -93,5 +87,45 @@ namespace VKExtension
 
             applicationContract.setFriendsListItemsSource(friends.ToList());
         }
+
+        public void GetPhotos()
+        {
+            if (!IsAuthorized) return;
+
+            Models.VkPhoto[] photos = Abilities.VkMethods.Photos_Get(null,response);
+
+            if (photos == null)
+            {
+                applicationContract.setInfoValue("Friends list is empty.");
+                return;
+            }
+
+            List<PhotosListItem> items = new List<PhotosListItem>();
+
+            foreach (Models.VkPhoto photo in photos)
+            {
+                PhotosListItem item = new PhotosListItem();
+                BitmapImage img = new BitmapImage(new Uri(photo.Sizes[0].Source));
+                item.img = img;
+                items.Add(item);
+            }
+
+            applicationContract.setPhotosListItemsSource(items);
+        }
+
+        public void GetNewsFeed()
+        {
+            if (!IsAuthorized) return;
+        }
+
+        public void SendMessage()
+        {
+            if (!IsAuthorized) return;
+        }
+    }
+
+    public class PhotosListItem
+    {
+        public BitmapImage img { get; set; }
     }
 }

@@ -11,5 +11,6 @@ namespace SocialNetworksManager.Contracts
     {
         void setInfoValue(String value);
         void setFriendsListItemsSource(IEnumerable<object> list);
+        void setPhotosListItemsSource(IEnumerable<object> list);
     }
 }

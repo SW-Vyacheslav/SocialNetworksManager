@@ -25,7 +25,10 @@ namespace SocialNetworksManager
             RefreshExtensions();
 
             but_refreshExtensions.Click += But_refreshExtensions_Click;
+
             but_getvkFriends.Click      += But_getvkFriends_Click;
+            but_getvkPhotos.Click       += But_getvkPhotos_Click;
+
             but_getfbFriends.Click      += But_getfbFriends_Click;
         }
 
@@ -50,7 +53,15 @@ namespace SocialNetworksManager
             compositionContainer =  new CompositionContainer(directoryCatalog);
             importManager        =  new ImportManager();
 
-            compositionContainer.ComposeParts(this, importManager);
+            try
+            {
+                compositionContainer.ComposeParts(this, importManager);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message,"Error");
+                Environment.Exit(1);
+            }
         }
 
         private void RefreshExtensions()
@@ -81,6 +92,12 @@ namespace SocialNetworksManager
 
             return null;
         }
+
+        private void HideAllLists()
+        {
+            friendsList.Visibility = Visibility.Collapsed;
+            photosList.Visibility = Visibility.Collapsed;
+        }
         #endregion
 
         #region ContractMethods
@@ -93,6 +110,11 @@ namespace SocialNetworksManager
         {
             friendsList.ItemsSource = list;
         }
+
+        public void setPhotosListItemsSource(IEnumerable<object> list)
+        {
+            photosList.ItemsSource = list;
+        }
         #endregion
 
         #region EventMethods
@@ -103,11 +125,22 @@ namespace SocialNetworksManager
 
         private void But_getvkFriends_Click(object sender, RoutedEventArgs e)
         {
+            HideAllLists();
+            friendsList.Visibility = Visibility.Visible;
             findSocialNetworkExtensionByName("VK").GetFriends();
+        }
+
+        private void But_getvkPhotos_Click(object sender, RoutedEventArgs e)
+        {
+            HideAllLists();
+            photosList.Visibility = Visibility.Visible;
+            findSocialNetworkExtensionByName("VK").GetPhotos();
         }
 
         private void But_getfbFriends_Click(object sender, RoutedEventArgs e)
         {
+            HideAllLists();
+            friendsList.Visibility = Visibility.Visible;
             findSocialNetworkExtensionByName("Facebook").GetFriends();
         }
 

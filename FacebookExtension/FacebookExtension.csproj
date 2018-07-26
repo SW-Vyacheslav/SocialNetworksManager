@@ -69,6 +69,10 @@
     <Compile Include="Responses\FacebookAuthResponse.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Converters\Converters.csproj">
+      <Project>{5ffc6752-9526-4a69-83e3-ca7919451108}</Project>
+      <Name>Converters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SocialNetworkManagerContracts\SocialNetworksManagerContracts.csproj">
       <Project>{13764bae-1622-4c17-be74-80a8578b3d60}</Project>
       <Name>SocialNetworksManagerContracts</Name>

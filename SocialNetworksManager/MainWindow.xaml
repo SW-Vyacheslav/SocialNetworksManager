@@ -12,22 +12,37 @@
                 <MenuItem x:Name="but_refreshExtensions" Header="Refresh Extensions"></MenuItem>
             </MenuItem>
             <MenuItem Header="Methods">
-                <MenuItem x:Name="but_getvkFriends" Header="VK Friends"></MenuItem>
-                <MenuItem x:Name="but_getfbFriends" Header="Facebook Friends"></MenuItem>
+                <MenuItem Header="Vk Methods">
+                    <MenuItem x:Name="but_getvkFriends" Header="VK Friends"></MenuItem>
+                    <MenuItem x:Name="but_getvkPhotos" Header="Vk Photos"></MenuItem>
+                </MenuItem>
+                <MenuItem Header="Facebook Methods">
+                    <MenuItem x:Name="but_getfbFriends" Header="Facebook Friends"></MenuItem>
+                </MenuItem>
             </MenuItem>
         </Menu>
         <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
         <DockPanel x:Name="controlHolder">
             <Label DockPanel.Dock="Top" x:Name="lbl_info"></Label>
-            <ListView x:Name="friendsList">
+            <ListView x:Name="friendsList" Visibility="Collapsed" Margin="5">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Path=ID}"></GridViewColumn>
                         <GridViewColumn Header="First Name" DisplayMemberBinding="{Binding Path=First_Name}"></GridViewColumn>
                         <GridViewColumn Header="Last Name" DisplayMemberBinding="{Binding Path=Last_Name}"></GridViewColumn>
                         <GridViewColumn Header="Online" DisplayMemberBinding="{Binding Path=Online}"></GridViewColumn>
+                        <GridViewColumn Header="Deactivated" DisplayMemberBinding="{Binding Path=Deactivated}"></GridViewColumn>
                     </GridView>
                 </ListView.View>
+            </ListView>
+            <ListView x:Name="photosList" Visibility="Collapsed" Margin="5">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{Binding Path=img}"></Image>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
             </ListView>
         </DockPanel>
     </DockPanel>

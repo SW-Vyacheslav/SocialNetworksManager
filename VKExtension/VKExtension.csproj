@@ -58,7 +58,15 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\User.cs" />
+    <Compile Include="Abilities\VkApiLinkCreator.cs" />
+    <Compile Include="Enums\VkApiVersion.cs" />
+    <Compile Include="Enums\VkMethod.cs" />
+    <Compile Include="Enums\VkUserField.cs" />
+    <Compile Include="Models\VkPhoto.cs" />
+    <Compile Include="Models\VkUser.cs" />
+    <Compile Include="Responses\VkFriendsGetResponse.cs" />
+    <Compile Include="Responses\VkNewsFeedGetResponse.cs" />
+    <Compile Include="Responses\VkPhotosGetResponse.cs" />
     <Compile Include="VkAuthForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -73,6 +81,10 @@
     <Compile Include="Abilities\VkMethods.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Converters\Converters.csproj">
+      <Project>{5ffc6752-9526-4a69-83e3-ca7919451108}</Project>
+      <Name>Converters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SocialNetworkManagerContracts\SocialNetworksManagerContracts.csproj">
       <Project>{13764bae-1622-4c17-be74-80a8578b3d60}</Project>
       <Name>SocialNetworksManagerContracts</Name>

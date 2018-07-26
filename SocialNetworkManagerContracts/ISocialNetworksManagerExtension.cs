@@ -14,6 +14,8 @@ namespace SocialNetworksManager.Contracts
 
         void Authorization();
         void GetFriends();
-        //void SendMessageToAllFriends();
+        void GetPhotos();
+        void GetNewsFeed();
+        void SendMessage();
     }
 }

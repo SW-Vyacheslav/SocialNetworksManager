@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
+
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
+using Converters;
 
 namespace VKExtension.Abilities
 {
@@ -24,37 +26,43 @@ namespace VKExtension.Abilities
             return win1251.GetString(win1251Bytes);
         }
 
-        public static Models.User[] Friends_Get(String user_id,Responses.VkAuthResponse response)
+        public static Models.VkUser[] Friends_Get(String userId,Responses.VkAuthResponse response)
         {
-            Models.User[] users = null;
+            Enums.VkUserField fields = Enums.VkUserField.ID | 
+                                       Enums.VkUserField.FirstName | 
+                                       Enums.VkUserField.LastName |
+                                       Enums.VkUserField.Deactivated |
+                                       Enums.VkUserField.Online;
 
-            String request = null;
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            if (userId != null) parameters["user_id"] = userId;
+            parameters["fields"] = EnumConverter.ConvertToString<Enums.VkUserField>(fields);
+            parameters["order"] = "hints";
+            parameters["access_token"] = response.AccessToken;
+            parameters["v"] = EnumConverter.ConvertToString<Enums.VkApiVersion>(Enums.VkApiVersion.V5_80);
 
-            if (user_id != null)
-            {
-                request = String.Format("https://api.vk.com/method/friends.get?user_id={0}&fields=id,first_name,last_name,online&order=hints&access_token={1}&v=5.80", user_id,response.AccessToken);
-            }
-            else
-            {
-                request = String.Format("https://api.vk.com/method/friends.get?&fields=id,first_name,last_name,online&order=hints&access_token={0}&v=5.80",response.AccessToken);
-            }
+            String request = VkApiLinkCreator.CreateLink(Enums.VkMethod.GetFriends, parameters);
+            String data = Windows1251ToUtf8(webClient.DownloadString(request));
 
+            Responses.VkFriendsGetResponse friends = JsonConvert.DeserializeObject<Responses.VkFriendsGetResponse>(data);
+
+            return friends.Response.Users;
+        }
+
+        public static Models.VkPhoto[] Photos_Get(String userId, Responses.VkAuthResponse response)
+        {
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            if (userId != null) parameters["owner_id"] = userId;
+            parameters["album_id"] = "profile";
+            parameters["access_token"] = response.AccessToken;
+            parameters["v"] = EnumConverter.ConvertToString<Enums.VkApiVersion>(Enums.VkApiVersion.V5_80);
+
+            String request = VkApiLinkCreator.CreateLink(Enums.VkMethod.GetPhotos,parameters);
             String data = webClient.DownloadString(request);
 
-            dynamic json = JObject.Parse(data);
+            Responses.VkPhotosGetResponse photos = JsonConvert.DeserializeObject<Responses.VkPhotosGetResponse>(data); ;
 
-            users = new Models.User[(int)json.response.count];
-
-            for (int i = 0; i < (int)json.response.count; i++)
-            {
-                users[i] = new Models.User();
-                users[i].ID = Convert.ToString((int)json.response.items[i].id);
-                users[i].First_Name = Windows1251ToUtf8((String)json.response.items[i].first_name);
-                users[i].Last_Name = Windows1251ToUtf8((String)json.response.items[i].last_name);
-                users[i].Online = (String)json.response.items[i].online == "1" ? true : false;
-            }
-
-            return users;
+            return photos.Response.Photos;
         }
     }
 }

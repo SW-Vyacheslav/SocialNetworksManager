@@ -4,50 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using FacebookExtension.Attributes;
 
 namespace FacebookExtension.Enums
 {
-    [AttributeUsage(AttributeTargets.Field)]
-    public class StringValueAttribute : Attribute
-    {
-        public String Value { get; private set; }
-
-        public StringValueAttribute(String value)
-        {
-            Value = value;
-        }
-    }
-
-    public static class FacebookAuthAppPermissionConverter
-    {
-        public static String ConvertToString(FacebookAuthAppPermission permission)
-        {
-            String output = "";
-            Type enumtype = typeof(FacebookAuthAppPermission);
-            Type underlyingType = Enum.GetUnderlyingType(enumtype);
-
-            Array values = Enum.GetValues(enumtype);
-            
-            for (int i = 0; i < values.Length; i++)
-            {
-                object value = values.GetValue(i);
-                object underlyingValue = Convert.ChangeType(value,underlyingType);
-
-                if(permission.HasFlag((Enum)value))
-                {
-                    String memberName = Enum.GetName(enumtype,value);
-                    MemberInfo[] member = enumtype.GetMember(memberName);
-                    object[] attribute = member[0].GetCustomAttributes(typeof(StringValueAttribute),false);
-
-                    if (output == "") output += ((StringValueAttribute)attribute[0]).Value;
-                    else output += (","+((StringValueAttribute)attribute[0]).Value);
-                }
-            }
-
-            return output;
-        }
-    }
-
     [Flags]
     public enum FacebookAuthAppPermission
     {
