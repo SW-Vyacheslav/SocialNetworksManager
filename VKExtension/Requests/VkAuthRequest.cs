@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VKExtension.Enums;
 using VKExtension.Responses;
 using System.Windows.Controls;
 using System.Reflection;
@@ -12,13 +11,16 @@ namespace VKExtension.Requests
 {
     public class VkAuthRequest
     {
-        public String              AppId        { get; set; }
-        public VkAuthAppAccessRule Scope        { get; set; }
-        public String              Version      { get; set; }
-        public String              Revoke       { get; set; }
+        public String AppId { get; private set; }
+        public Enums.VkAuthAppAccessRule Scope { get; private set; }
+        public Enums.VkApiVersion Version { get; private set; }
+        public String Revoke { get; set; }
 
-        public VkAuthRequest()
+        public VkAuthRequest(String app_id, Enums.VkAuthAppAccessRule scope, Enums.VkApiVersion version)
         {
+            AppId = app_id;
+            Scope = scope;
+            Version = version;
             Revoke = "0";
         }
             

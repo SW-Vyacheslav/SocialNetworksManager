@@ -28,6 +28,7 @@ namespace SocialNetworksManager
 
             but_getvkFriends.Click      += But_getvkFriends_Click;
             but_getvkPhotos.Click       += But_getvkPhotos_Click;
+            but_sendvkMessage.Click     += But_sendvkMessage_Click;
 
             but_getfbFriends.Click      += But_getfbFriends_Click;
         }
@@ -115,6 +116,16 @@ namespace SocialNetworksManager
         {
             photosList.ItemsSource = list;
         }
+
+        public string getMessageText()
+        {
+            return txt_msg.Text;
+        }
+
+        public object getSelectedItem()
+        {
+            return friendsList.SelectedItem;
+        }
         #endregion
 
         #region EventMethods
@@ -137,6 +148,11 @@ namespace SocialNetworksManager
             findSocialNetworkExtensionByName("VK").GetPhotos();
         }
 
+        private void But_sendvkMessage_Click(object sender, RoutedEventArgs e)
+        {
+            findSocialNetworkExtensionByName("VK").SendMessage();
+        }
+
         private void But_getfbFriends_Click(object sender, RoutedEventArgs e)
         {
             HideAllLists();
@@ -147,6 +163,11 @@ namespace SocialNetworksManager
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            findSocialNetworkExtensionByName("VK").SendMessage();
         }
         #endregion
     }

@@ -4,17 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
-using System.Net;
 using System.Windows.Controls;
-using System.Text.RegularExpressions;
+using System.Windows.Media.Imaging;
 
 using SocialNetworksManager.Contracts;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using mshtml;
-using System.Windows.Media.Imaging;
 
 namespace VKExtension
 {
@@ -51,11 +44,13 @@ namespace VKExtension
                 applicationContract.setInfoValue("You are authorized in VK.");
                 return;
             }
-            Requests.VkAuthRequest request = new Requests.VkAuthRequest()
+
+            Enums.VkAuthAppAccessRule rules = Enums.VkAuthAppAccessRule.Friends |
+                                              Enums.VkAuthAppAccessRule.Photos | 
+                                              Enums.VkAuthAppAccessRule.Messages;
+
+            Requests.VkAuthRequest request = new Requests.VkAuthRequest("6629531",rules,Enums.VkApiVersion.V5_80)
             {
-                AppId = "6629531",
-                Version = "5.80",
-                Scope = Enums.VkAuthAppAccessRule.Friends,
                 Revoke = "1"
             };
 
@@ -77,7 +72,7 @@ namespace VKExtension
         {
             if (!IsAuthorized) return;
 
-            Models.VkUser[] friends = Abilities.VkMethods.Friends_Get(null,response);
+            Models.VkUser[] friends = Abilities.VkMethods.Friends_Get(response);
 
             if(friends == null)
             {
@@ -92,7 +87,7 @@ namespace VKExtension
         {
             if (!IsAuthorized) return;
 
-            Models.VkPhoto[] photos = Abilities.VkMethods.Photos_Get(null,response);
+            Models.VkPhoto[] photos = Abilities.VkMethods.Photos_Get(response);
 
             if (photos == null)
             {
@@ -121,6 +116,12 @@ namespace VKExtension
         public void SendMessage()
         {
             if (!IsAuthorized) return;
+
+            Models.VkUser user = (Models.VkUser)applicationContract.getSelectedItem();
+
+            String userID = Convert.ToString(user.ID);
+
+            Abilities.VkMethods.Message_Send(userID, applicationContract.getMessageText(),response);
         }
     }
 

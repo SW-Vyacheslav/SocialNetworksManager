@@ -15,6 +15,7 @@
                 <MenuItem Header="Vk Methods">
                     <MenuItem x:Name="but_getvkFriends" Header="VK Friends"></MenuItem>
                     <MenuItem x:Name="but_getvkPhotos" Header="Vk Photos"></MenuItem>
+                    <MenuItem x:Name="but_sendvkMessage" Header="Vk Send Message"></MenuItem>
                 </MenuItem>
                 <MenuItem Header="Facebook Methods">
                     <MenuItem x:Name="but_getfbFriends" Header="Facebook Friends"></MenuItem>
@@ -24,6 +25,14 @@
         <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
         <DockPanel x:Name="controlHolder">
             <Label DockPanel.Dock="Top" x:Name="lbl_info"></Label>
+            <Grid DockPanel.Dock="Bottom" Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" HorizontalContentAlignment="Center">Message:</Label>
+                <TextBox  x:Name="txt_msg" Grid.Column="1" VerticalContentAlignment="Center"></TextBox>
+            </Grid>
             <ListView x:Name="friendsList" Visibility="Collapsed" Margin="5">
                 <ListView.View>
                     <GridView>
@@ -34,12 +43,17 @@
                         <GridViewColumn Header="Deactivated" DisplayMemberBinding="{Binding Path=Deactivated}"></GridViewColumn>
                     </GridView>
                 </ListView.View>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Send Message" Click="MenuItem_Click"></MenuItem>
+                    </ContextMenu>
+                </ListView.ContextMenu>
             </ListView>
             <ListView x:Name="photosList" Visibility="Collapsed" Margin="5">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding Path=img}"></Image>
+                            <Image Width="75" Height="75" Source="{Binding Path=img}"></Image>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

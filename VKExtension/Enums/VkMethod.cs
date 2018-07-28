@@ -18,6 +18,9 @@ namespace VKExtension.Enums
         GetPhotos = 2,
 
         [StringValue("newsfeed.get")]
-        GetNewsFeed = 4
+        GetNewsFeed = 4,
+
+        [StringValue("messages.send")]
+        SendMessage = 8
     }
 }

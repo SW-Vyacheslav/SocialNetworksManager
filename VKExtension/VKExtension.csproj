@@ -61,9 +61,13 @@
     <Compile Include="Abilities\VkApiLinkCreator.cs" />
     <Compile Include="Enums\VkApiVersion.cs" />
     <Compile Include="Enums\VkMethod.cs" />
+    <Compile Include="Enums\VkPhotoAlbumId.cs" />
     <Compile Include="Enums\VkUserField.cs" />
     <Compile Include="Models\VkPhoto.cs" />
     <Compile Include="Models\VkUser.cs" />
+    <Compile Include="Requests\VkFriendsGetRequest.cs" />
+    <Compile Include="Requests\VkMessageSendRequest.cs" />
+    <Compile Include="Requests\VkPhotosGetRequest.cs" />
     <Compile Include="Responses\VkFriendsGetResponse.cs" />
     <Compile Include="Responses\VkNewsFeedGetResponse.cs" />
     <Compile Include="Responses\VkPhotosGetResponse.cs" />

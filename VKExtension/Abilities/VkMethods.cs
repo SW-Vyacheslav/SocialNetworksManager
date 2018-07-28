@@ -7,8 +7,6 @@ using System.Net;
 
 using Newtonsoft.Json;
 
-using Converters;
-
 namespace VKExtension.Abilities
 {
     public static class VkMethods
@@ -28,21 +26,41 @@ namespace VKExtension.Abilities
 
         public static Models.VkUser[] Friends_Get(String userId,Responses.VkAuthResponse response)
         {
-            Enums.VkUserField fields = Enums.VkUserField.ID | 
-                                       Enums.VkUserField.FirstName | 
+            if (userId == null) return null;
+
+            Enums.VkUserField fields = Enums.VkUserField.ID |
+                                       Enums.VkUserField.FirstName |
                                        Enums.VkUserField.LastName |
                                        Enums.VkUserField.Deactivated |
                                        Enums.VkUserField.Online;
 
-            Dictionary<String, String> parameters = new Dictionary<string, string>();
-            if (userId != null) parameters["user_id"] = userId;
-            parameters["fields"] = EnumConverter.ConvertToString<Enums.VkUserField>(fields);
-            parameters["order"] = "hints";
-            parameters["access_token"] = response.AccessToken;
-            parameters["v"] = EnumConverter.ConvertToString<Enums.VkApiVersion>(Enums.VkApiVersion.V5_80);
+            Requests.VkFriendsGetRequest request = new Requests.VkFriendsGetRequest(response.AccessToken,Enums.VkApiVersion.V5_80)
+            {
+                UserID = Convert.ToString(userId),
+                Fields = fields
+            };
 
-            String request = VkApiLinkCreator.CreateLink(Enums.VkMethod.GetFriends, parameters);
-            String data = Windows1251ToUtf8(webClient.DownloadString(request));
+            String data = Windows1251ToUtf8(webClient.DownloadString(request.ToString()));
+
+            Responses.VkFriendsGetResponse friends = JsonConvert.DeserializeObject<Responses.VkFriendsGetResponse>(data);
+
+            return friends.Response.Users;
+        }
+
+        public static Models.VkUser[] Friends_Get(Responses.VkAuthResponse response)
+        {
+            Enums.VkUserField fields = Enums.VkUserField.ID |
+                                       Enums.VkUserField.FirstName |
+                                       Enums.VkUserField.LastName |
+                                       Enums.VkUserField.Deactivated |
+                                       Enums.VkUserField.Online;
+
+            Requests.VkFriendsGetRequest request = new Requests.VkFriendsGetRequest(response.AccessToken,Enums.VkApiVersion.V5_80)
+            {
+                Fields = fields
+            };
+
+            String data = Windows1251ToUtf8(webClient.DownloadString(request.ToString()));
 
             Responses.VkFriendsGetResponse friends = JsonConvert.DeserializeObject<Responses.VkFriendsGetResponse>(data);
 
@@ -51,18 +69,52 @@ namespace VKExtension.Abilities
 
         public static Models.VkPhoto[] Photos_Get(String userId, Responses.VkAuthResponse response)
         {
-            Dictionary<String, String> parameters = new Dictionary<string, string>();
-            if (userId != null) parameters["owner_id"] = userId;
-            parameters["album_id"] = "profile";
-            parameters["access_token"] = response.AccessToken;
-            parameters["v"] = EnumConverter.ConvertToString<Enums.VkApiVersion>(Enums.VkApiVersion.V5_80);
+            if (userId == null) return null;
 
-            String request = VkApiLinkCreator.CreateLink(Enums.VkMethod.GetPhotos,parameters);
-            String data = webClient.DownloadString(request);
+            Requests.VkPhotosGetRequest request = new Requests.VkPhotosGetRequest(Convert.ToString(userId), Enums.VkPhotoAlbumId.Profile, response.AccessToken, Enums.VkApiVersion.V5_80);
+
+            String data = webClient.DownloadString(request.ToString());
 
             Responses.VkPhotosGetResponse photos = JsonConvert.DeserializeObject<Responses.VkPhotosGetResponse>(data); ;
 
             return photos.Response.Photos;
+        }
+
+        public static Models.VkPhoto[] Photos_Get(Responses.VkAuthResponse response)
+        {
+            Requests.VkPhotosGetRequest request = new Requests.VkPhotosGetRequest(response.UserId, Enums.VkPhotoAlbumId.Profile, response.AccessToken, Enums.VkApiVersion.V5_80);
+
+            String data = webClient.DownloadString(request.ToString());
+
+            Responses.VkPhotosGetResponse photos = JsonConvert.DeserializeObject<Responses.VkPhotosGetResponse>(data);
+
+            return photos.Response.Photos;
+        }
+
+        public static bool Message_Send(String userId, String message , Responses.VkAuthResponse response)
+        {
+            if (userId == null) return false;
+
+            Requests.VkMessageSendRequest request = new Requests.VkMessageSendRequest(userId, response.AccessToken, Enums.VkApiVersion.V5_80)
+            {
+                Message = message
+            };
+
+            String data = webClient.DownloadString(request.ToString());
+
+            return true;
+        }
+
+        public static bool Message_Send(String message, Responses.VkAuthResponse response)
+        {
+            Requests.VkMessageSendRequest request = new Requests.VkMessageSendRequest(response.UserId, response.AccessToken, Enums.VkApiVersion.V5_80)
+            {
+                Message = message
+            };
+
+            String data = webClient.DownloadString(request.ToString());
+
+            return true;
         }
     }
 }
