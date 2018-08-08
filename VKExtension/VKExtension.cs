@@ -4,129 +4,154 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
-using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 using SocialNetworksManager.Contracts;
+using SocialNetworksManager.DataPresentation;
 
-namespace VKExtension
+using VkNet;
+using VkNet.Model;
+using VkNet.Model.Attachments;
+using VkNet.Model.RequestParams;
+using VkNet.Enums.Filters;
+using VkNet.Enums.SafetyEnums;
+using VkNet.Utils;
+using VkNet.Exception;
+
+namespace VkExtension
 {
-    //Расширение для вконтакте
     [Export(typeof(ISocialNetworksManagerExtension))]
-    public class VKExtension : ISocialNetworksManagerExtension
+    public class VkExtension : ISocialNetworksManagerExtension
     {
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
-        private IApplicationContract applicationContract;
+        public IApplicationContract applicationContract;
 
-        private Responses.VkAuthResponse response;
-
-        public bool IsAuthorized { get; private set; }
-
-        public VKExtension()
+        private VkApi vk_api;
+        
+        public VkExtension()
         {
-            IsAuthorized = false;
+            vk_api = new VkApi();
         }
 
-        public string getExtensionName()
-        {
-            return "VK_Extension";
-        }
-
-        public string getSocialNetworkName()
+        public String getSocialNetworkName()
         {
             return "VK";
         }
 
+        public String getExtensionName()
+        {
+            return "VK_Extension";
+        }
+
+        public bool GetAuthStatus()
+        {
+            return vk_api.IsAuthorized;
+        }
+
         public void Authorization()
         {
-            if (IsAuthorized)
-            {
-                applicationContract.setInfoValue("You are authorized in VK.");
-                return;
-            }
+            if (vk_api.IsAuthorized) return;
 
-            Enums.VkAuthAppAccessRule rules = Enums.VkAuthAppAccessRule.Friends |
-                                              Enums.VkAuthAppAccessRule.Photos | 
-                                              Enums.VkAuthAppAccessRule.Messages;
+            AuthControl authControl = new AuthControl(applicationContract);
+            applicationContract.OpenSpecialWindow(authControl);
 
-            Requests.VkAuthRequest request = new Requests.VkAuthRequest("6629531",rules,Enums.VkApiVersion.V5_80)
-            {
-                Revoke = "1"
-            };
+            ApiAuthParams authParams = new ApiAuthParams();
+            authParams.ApplicationId = Properties.AppSettings.Default.client_id;
+            authParams.Login = authControl.GetLogin();
+            authParams.Password = authControl.GetPassword();
+            authParams.Settings = Settings.All;
 
-            VkAuthForm authForm = new VkAuthForm(request);
-            response = authForm.Authorize();
-            if (response == null)
+            try
             {
-                applicationContract.setInfoValue("VkAuth ERROR!");
+                vk_api.Authorize(authParams);
             }
-            else if (!response.Error)
+            catch (VkApiException ex)
             {
-                IsAuthorized = true;
-                applicationContract.setInfoValue("VkAuth OK!");
+                
             }
-            else applicationContract.setInfoValue("VkAuth ERROR!");
         }
 
         public void GetFriends()
         {
-            if (!IsAuthorized) return;
+            if (!vk_api.IsAuthorized) return;
 
-            Models.VkUser[] friends = Abilities.VkMethods.Friends_Get(response);
+            FriendsGetParams getParams = new FriendsGetParams();
+            getParams.Fields = ProfileFields.FirstName | ProfileFields.LastName | ProfileFields.Online;
 
-            if(friends == null)
+            VkCollection<User> friends = null;
+
+            try
             {
-                applicationContract.setInfoValue("Friends list is empty.");
-                return;
+                friends = vk_api.Friends.Get(getParams, true);
+            }
+            catch (VkApiException ex)
+            {
+                
             }
 
-            applicationContract.setFriendsListItemsSource(friends.ToList());
+            List<FriendsListItem> friendsItems = new List<FriendsListItem>();
+
+            foreach (User friend in friends)
+            {
+                FriendsListItem friendItem = new FriendsListItem();
+                friendItem.SocialNetworkName = getSocialNetworkName();
+                friendItem.FriendName = String.Format("{0} {1}",friend.FirstName,friend.LastName);
+                friendItem.Status = friend.Online == true ? "Online" : "Offline";
+                friendsItems.Add(friendItem);
+            }
+
+            applicationContract.AddItemsToFriendsList(friendsItems);
         }
 
         public void GetPhotos()
         {
-            if (!IsAuthorized) return;
+            if (!vk_api.IsAuthorized) return;
 
-            Models.VkPhoto[] photos = Abilities.VkMethods.Photos_Get(response);
+            PhotoGetParams getParams = new PhotoGetParams();
+            getParams.AlbumId = PhotoAlbumType.Profile;
+            getParams.PhotoSizes = true;
 
-            if (photos == null)
+            VkCollection<Photo> photos = null;
+
+            try
             {
-                applicationContract.setInfoValue("Friends list is empty.");
-                return;
+                photos = vk_api.Photo.Get(getParams, true);
+            }
+            catch(VkApiException ex)
+            {
+
             }
 
-            List<PhotosListItem> items = new List<PhotosListItem>();
+            List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            foreach (Models.VkPhoto photo in photos)
+            foreach (Photo photo in photos)
             {
-                PhotosListItem item = new PhotosListItem();
-                BitmapImage img = new BitmapImage(new Uri(photo.Sizes[0].Source));
-                item.img = img;
-                items.Add(item);
+                PhotosListItem photoItem = new PhotosListItem();
+                photoItem.SocialNetworkName = getSocialNetworkName();
+                photoItem.PhotoSource = photo.Sizes[2].Url.ToString();
+
+                photosItems.Add(photoItem);
             }
 
-            applicationContract.setPhotosListItemsSource(items);
-        }
-
-        public void GetNewsFeed()
-        {
-            if (!IsAuthorized) return;
+            applicationContract.AddItemsToPhotosList(photosItems);
         }
 
         public void SendMessage()
         {
-            if (!IsAuthorized) return;
+            if (!vk_api.IsAuthorized) return;
 
-            Models.VkUser user = (Models.VkUser)applicationContract.getSelectedItem();
+            MessagesSendParams sendParams = new MessagesSendParams();
+            sendParams.UserId = vk_api.UserId;
+            sendParams.Message = "test";
 
-            String userID = Convert.ToString(user.ID);
+            try
+            {
+                vk_api.Messages.Send(sendParams);
+            }
+            catch (VkApiException ex)
+            {
 
-            Abilities.VkMethods.Message_Send(userID, applicationContract.getMessageText(),response);
+            }
         }
-    }
-
-    public class PhotosListItem
-    {
-        public BitmapImage img { get; set; }
     }
 }

@@ -5,35 +5,51 @@ using System.Windows.Controls;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.IO;
-using SocialNetworksManager.Contracts;
 using System.Text;
 using System.Collections.Generic;
+
+using SocialNetworksManager.Contracts;
+using SocialNetworksManager.DataPresentation;
+
+using MahApps.Metro.Controls;
 
 namespace SocialNetworksManager
 {
     [Export(typeof(IApplicationContract))]
-    public partial class MainWindow : Window, IApplicationContract
+    public partial class MainWindow : MetroWindow, IApplicationContract
     {
         private DirectoryCatalog     directoryCatalog     = null;
         private CompositionContainer compositionContainer = null;
         private ImportManager        importManager        = null;
 
+        private List<SocialNetworksListItem> socialNetworksListItems = new List<SocialNetworksListItem>();
+        private List<FriendsListItem> friendsListItems = new List<FriendsListItem>();
+        private List<PhotosListItem> photosListItems = new List<PhotosListItem>();
+
+        private SpecialWindow specialWindow;
+
         public MainWindow()
         {
+            //For release
+            //SetDllsDirectory(Environment.CurrentDirectory+"\\bin");
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
 
-            but_refreshExtensions.Click += But_refreshExtensions_Click;
+            Closing += MainWindow_Closing;
+        }
 
-            but_getvkFriends.Click      += But_getvkFriends_Click;
-            but_getvkPhotos.Click       += But_getvkPhotos_Click;
-            but_sendvkMessage.Click     += But_sendvkMessage_Click;
-
-            but_getfbFriends.Click      += But_getfbFriends_Click;
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (CefSharp.Cef.IsInitialized) CefSharp.Cef.Shutdown();
         }
 
         #region UsualMethods
+        private void SetDllsDirectory(String path)
+        {
+            Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + ";" + path);
+        }
+
         private void InitializeContainer()
         {
             String dirPath = Environment.CurrentDirectory + "\\Extensions";
@@ -69,16 +85,26 @@ namespace SocialNetworksManager
         {
             if (directoryCatalog == null) return;
             directoryCatalog.Refresh();
-            socialNetworksHolder.Children.Clear();
+            socialNetworksHolder.ItemsSource = null;
 
+            List<SocialNetworksListItem> oldList = socialNetworksListItems;
+            socialNetworksListItems = new List<SocialNetworksListItem>();
+            
             foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
-                Button button   =  new Button();
-                button.Content  =  extension.Value.getSocialNetworkName();
-                button.Click   +=  Button_Click;
+                SocialNetworksListItem methodsItem = new SocialNetworksListItem();
+                methodsItem.Name = extension.Value.getSocialNetworkName();
+                methodsItem.Status = extension.Value.GetAuthStatus() == true ? "Authorized" : "Not Authorized";
 
-                socialNetworksHolder.Children.Add(button);
+                foreach (SocialNetworksListItem item in oldList)
+                {
+                    if (methodsItem.Name == item.Name) methodsItem.IsButtonEnabled = item.IsButtonEnabled;
+                }
+                
+                socialNetworksListItems.Add(methodsItem);
             }
+
+            socialNetworksHolder.ItemsSource = socialNetworksListItems;
         }
 
         private ISocialNetworksManagerExtension findSocialNetworkExtensionByName(String name)
@@ -93,81 +119,97 @@ namespace SocialNetworksManager
 
             return null;
         }
-
-        private void HideAllLists()
-        {
-            friendsList.Visibility = Visibility.Collapsed;
-            photosList.Visibility = Visibility.Collapsed;
-        }
         #endregion
 
         #region ContractMethods
-        public void setInfoValue(string value)
+        public void AddItemsToFriendsList(List<FriendsListItem> items)
         {
-            lbl_info.Content = value;
+            friendsListItems.AddRange(items);
         }
 
-        public void setFriendsListItemsSource(IEnumerable<object> list)
+        public void AddItemsToPhotosList(List<PhotosListItem> items)
         {
-            friendsList.ItemsSource = list;
+            photosListItems.AddRange(items);
         }
 
-        public void setPhotosListItemsSource(IEnumerable<object> list)
+        public void OpenSpecialWindow(Uri uri, Uri redirect_uri, Dictionary<String, String> parameters)
         {
-            photosList.ItemsSource = list;
+            specialWindow = new SpecialWindow(uri,redirect_uri,parameters);
+            specialWindow.ShowDialog();
         }
 
-        public string getMessageText()
+        public void OpenSpecialWindow(UserControl userControl)
         {
-            return txt_msg.Text;
+            specialWindow = new SpecialWindow(userControl);
+            specialWindow.ShowDialog();
         }
 
-        public object getSelectedItem()
+        public void CloseSpecialWindow()
         {
-            return friendsList.SelectedItem;
+            specialWindow.Close();
         }
         #endregion
 
         #region EventMethods
-        private void But_refreshExtensions_Click(object sender, RoutedEventArgs e)
+        private void Button_RefreshExtensions_Click(object sender, RoutedEventArgs e)
         {
             RefreshExtensions();
         }
 
-        private void But_getvkFriends_Click(object sender, RoutedEventArgs e)
+        private void Button_Auth_Click(object sender, RoutedEventArgs e)
         {
-            HideAllLists();
-            friendsList.Visibility = Visibility.Visible;
-            findSocialNetworkExtensionByName("VK").GetFriends();
+            Button button = sender as Button;
+            SocialNetworksListItem item = (button).DataContext as SocialNetworksListItem;
+            ISocialNetworksManagerExtension extension = findSocialNetworkExtensionByName(item.Name);
+            extension.Authorization();
+            if (extension.GetAuthStatus())
+            {
+                item.Status = "Authorized";
+                item.IsButtonEnabled = false;
+                button.IsEnabled = false;
+            }
         }
 
-        private void But_getvkPhotos_Click(object sender, RoutedEventArgs e)
+        private void Button_Select_All_Friends(object sender, RoutedEventArgs e)
         {
-            HideAllLists();
-            photosList.Visibility = Visibility.Visible;
-            findSocialNetworkExtensionByName("VK").GetPhotos();
+            foreach (FriendsListItem item in friendsListItems)
+            {
+                item.IsChecked = true;
+            }
         }
 
-        private void But_sendvkMessage_Click(object sender, RoutedEventArgs e)
+        private void Button_Deselect_All_Friends(object sender, RoutedEventArgs e)
         {
-            findSocialNetworkExtensionByName("VK").SendMessage();
+            foreach (FriendsListItem item in friendsListItems)
+            {
+                item.IsChecked = false;
+            }
         }
 
-        private void But_getfbFriends_Click(object sender, RoutedEventArgs e)
+        private void Button_Update_Friends(object sender, RoutedEventArgs e)
         {
-            HideAllLists();
-            friendsList.Visibility = Visibility.Visible;
-            findSocialNetworkExtensionByName("Facebook").GetFriends();
+            friendsList.ItemsSource = null;
+            friendsListItems.Clear();
+
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                item.Value.GetFriends();
+            }
+
+            friendsList.ItemsSource = friendsListItems;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Update_Photos(object sender, RoutedEventArgs e)
         {
-            findSocialNetworkExtensionByName(((Button)sender).Content.ToString()).Authorization();
-        }
+            photosList.ItemsSource = null;
+            photosListItems.Clear();
+            
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                item.Value.GetPhotos();
+            }
 
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            findSocialNetworkExtensionByName("VK").SendMessage();
+            photosList.ItemsSource = photosListItems;
         }
         #endregion
     }

@@ -1,63 +1,91 @@
-﻿<Window x:Class="SocialNetworksManager.MainWindow"
+﻿<Controls:MetroWindow x:Class="SocialNetworksManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SocialNetworksManager"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="500">
+
+        Title="Social Networks Manager" Height="600" Width="800">
+
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button Content="Refresh Extensions" Click="Button_RefreshExtensions_Click"/>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="Settings">
-                <MenuItem x:Name="but_refreshExtensions" Header="Refresh Extensions"></MenuItem>
-            </MenuItem>
-            <MenuItem Header="Methods">
-                <MenuItem Header="Vk Methods">
-                    <MenuItem x:Name="but_getvkFriends" Header="VK Friends"></MenuItem>
-                    <MenuItem x:Name="but_getvkPhotos" Header="Vk Photos"></MenuItem>
-                    <MenuItem x:Name="but_sendvkMessage" Header="Vk Send Message"></MenuItem>
-                </MenuItem>
-                <MenuItem Header="Facebook Methods">
-                    <MenuItem x:Name="but_getfbFriends" Header="Facebook Friends"></MenuItem>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
-        <StackPanel x:Name="socialNetworksHolder" DockPanel.Dock="Left" Margin="5" Width="100"></StackPanel>
-        <DockPanel x:Name="controlHolder">
-            <Label DockPanel.Dock="Top" x:Name="lbl_info"></Label>
-            <Grid DockPanel.Dock="Bottom" Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" HorizontalContentAlignment="Center">Message:</Label>
-                <TextBox  x:Name="txt_msg" Grid.Column="1" VerticalContentAlignment="Center"></TextBox>
-            </Grid>
-            <ListView x:Name="friendsList" Visibility="Collapsed" Margin="5">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Path=ID}"></GridViewColumn>
-                        <GridViewColumn Header="First Name" DisplayMemberBinding="{Binding Path=First_Name}"></GridViewColumn>
-                        <GridViewColumn Header="Last Name" DisplayMemberBinding="{Binding Path=Last_Name}"></GridViewColumn>
-                        <GridViewColumn Header="Online" DisplayMemberBinding="{Binding Path=Online}"></GridViewColumn>
-                        <GridViewColumn Header="Deactivated" DisplayMemberBinding="{Binding Path=Deactivated}"></GridViewColumn>
-                    </GridView>
-                </ListView.View>
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Send Message" Click="MenuItem_Click"></MenuItem>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-            </ListView>
-            <ListView x:Name="photosList" Visibility="Collapsed" Margin="5">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Image Width="75" Height="75" Source="{Binding Path=img}"></Image>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </DockPanel>
+        <TabControl>
+
+            <TabItem Header="Social Networks">
+                <ListView x:Name="socialNetworksHolder">
+                    <ListView.View>
+                        <GridView AllowsColumnReorder="False">
+                            <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=Name}"/>
+                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}"/>
+                            <GridViewColumn>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Authorize" Click="Button_Auth_Click" Width="100" IsEnabled="{Binding Path=IsButtonEnabled}"></Button>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+
+            <TabItem Header="Friends">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button Content="Select All" Click="Button_Select_All_Friends"></Button>
+                        <Button Content="Deselect All" Click="Button_Deselect_All_Friends"></Button>
+                        <Button Content="Update" Click="Button_Update_Friends"></Button>
+                    </StackPanel>
+                    <ListView x:Name="friendsList">
+                        <ListView.View>
+                            <GridView AllowsColumnReorder="False">
+                                <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
+                                <GridViewColumn Header="Friend Name" DisplayMemberBinding="{Binding Path=FriendName}"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}"/>
+                                <GridViewColumn>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path=IsChecked}"></CheckBox>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DockPanel>
+            </TabItem>
+            
+            <TabItem Header="Photos">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button Content="Update" Click="Button_Update_Photos"></Button>
+                    </StackPanel>
+                    <ListView x:Name="photosList">
+                        <ListView.View>
+                            <GridView AllowsColumnReorder="False">
+                                <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
+                                <GridViewColumn Header="Photo">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Image Source="{Binding Path=PhotoSource}"></Image>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DockPanel>
+            </TabItem>
+
+        </TabControl>
+
     </DockPanel>
-</Window>
+    
+</Controls:MetroWindow>

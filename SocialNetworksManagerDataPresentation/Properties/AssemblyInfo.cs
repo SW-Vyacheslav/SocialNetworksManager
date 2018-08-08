@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("VkExtension")]
+[assembly: AssemblyTitle("SocialNetworksManagerDataPresentation")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("VkExtension")]
+[assembly: AssemblyProduct("SocialNetworksManagerDataPresentation")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("de82dad1-55ed-4bf1-998a-c9b3870d85c0")]
+[assembly: Guid("4fb2ec52-d061-4947-b8b5-e9af14f3fb7a")]
 
 // Version information for an assembly consists of the following four values:
 //
