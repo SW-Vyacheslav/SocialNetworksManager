@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-namespace SlackExtension
+namespace SlackExtension.Responses
 {
     public class SlackGetTokenResponse
     {

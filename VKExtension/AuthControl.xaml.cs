@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
 
 using SocialNetworksManager.Contracts;
 
@@ -28,12 +29,45 @@ namespace VkExtension
         {
             InitializeComponent();
 
+            GetUserEnteredData();
             this.applicationContract = applicationContract;
         }
 
         private void Button_LogIn_Click(object sender, RoutedEventArgs e)
         {
+            if (remember_check_box.IsChecked == true)
+            {
+                SaveUserEnteredData();
+            }
             applicationContract.CloseSpecialWindow();
+        }
+
+        private void SaveUserEnteredData()
+        {
+            String userData = String.Format("{0}:{1}", GetLogin(), GetPassword());
+
+            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\Extensions\\userdata", FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter writer = new StreamWriter(fileStream))
+                {
+                    writer.Write(userData);
+                }
+            }
+        }
+
+        private void GetUserEnteredData()
+        {
+            if (!File.Exists(Environment.CurrentDirectory + "\\Extensions\\userdata")) return;
+
+            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\Extensions\\userdata", FileMode.Open, FileAccess.Read))
+            {
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                    String userData = reader.ReadToEnd();
+                    login.Text = userData.Split(':')[0];
+                    password.Password = userData.Split(':')[1];
+                }
+            }
         }
 
         public String GetLogin()

@@ -13,6 +13,6 @@ namespace SocialNetworksManager.Contracts
         void Authorization();
         void GetFriends();
         void GetPhotos();
-        void SendMessage();
+        void SendMessageToSelectedFriends();
     }
 }

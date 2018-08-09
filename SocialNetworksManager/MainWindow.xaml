@@ -43,12 +43,21 @@
                         <Button Content="Deselect All" Click="Button_Deselect_All_Friends"></Button>
                         <Button Content="Update" Click="Button_Update_Friends"></Button>
                     </StackPanel>
+                    <Grid DockPanel.Dock="Bottom">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0">Message:</Label>
+                        <TextBox Grid.Column="1" x:Name="message_text_box"></TextBox>
+                        <Button Grid.Column="2" Content="Send Message" Click="Button_SendMessage_Click"></Button>
+                    </Grid>
                     <ListView x:Name="friendsList">
                         <ListView.View>
                             <GridView AllowsColumnReorder="False">
                                 <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
                                 <GridViewColumn Header="Friend Name" DisplayMemberBinding="{Binding Path=FriendName}"/>
-                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}"/>
                                 <GridViewColumn>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>

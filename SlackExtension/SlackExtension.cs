@@ -9,7 +9,6 @@ using System.Windows;
 using SocialNetworksManager.Contracts;
 using SocialNetworksManager.DataPresentation;
 
-using SlackAPI;
 using System.Threading;
 
 namespace SlackExtension
@@ -55,16 +54,16 @@ namespace SlackExtension
         {
             if (!GetAuthStatus()) return;
 
-            List<User> users = slackHelper.GetUsers();
+            List<Models.SlackUser> users = slackHelper.GetUsers();
 
             List<FriendsListItem> friendsItems = new List<FriendsListItem>();
 
-            foreach (User user in users)
+            foreach (Models.SlackUser user in users)
             {
                 FriendsListItem friendItem = new FriendsListItem();
                 friendItem.SocialNetworkName = getSocialNetworkName();
-                friendItem.FriendName = user.profile.real_name;
-                friendItem.Status = "Error";
+                friendItem.FriendName = user.Profile.RealName;
+                friendItem.ID = user.ID;
                 friendsItems.Add(friendItem);
             }
 
@@ -75,15 +74,15 @@ namespace SlackExtension
         {
             if (!GetAuthStatus()) return;
 
-            List<SlackFile> photos = slackHelper.GetPhotos();
+            List<Models.SlackFile> files = slackHelper.GetPhotos();
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            foreach (SlackFile photo in photos)
+            foreach (Models.SlackFile file in files)
             {
                 PhotosListItem photoItem = new PhotosListItem();
                 photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = photo.thumb_80;
+                photoItem.PhotoSource = file.Thumb80;
 
                 photosItems.Add(photoItem);
             }
@@ -91,9 +90,30 @@ namespace SlackExtension
             applicationContract.AddItemsToPhotosList(photosItems);
         }
 
-        public void SendMessage()
+        public void SendMessageToSelectedFriends()
         {
-            
+            if (!GetAuthStatus()) return;
+
+            List<FriendsListItem> items = applicationContract.GetFriendsListItems();
+            List<Models.SlackIM> ims = slackHelper.GetIms();
+
+            foreach (FriendsListItem item in items)
+            {
+                if (!item.SocialNetworkName.Equals(getSocialNetworkName())) continue;
+                if (!item.IsChecked) continue;
+
+                String channel_id = null;
+
+                foreach (Models.SlackIM im in ims)
+                {
+                    if(item.ID == im.User)
+                    {
+                        channel_id = im.ID;
+                    }
+                }
+                
+                slackHelper.SendMessage(channel_id, applicationContract.GetMessage());
+            }
         }
     }
 }

@@ -54,6 +54,7 @@ namespace SocialNetworksManager
         public SpecialWindow(UserControl userControl)
         {
             InitializeComponent();
+            Height = userControl.Height*2;
             controlHolder.Children.Add(userControl);
         }
 

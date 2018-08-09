@@ -96,7 +96,7 @@ namespace VkExtension
                 FriendsListItem friendItem = new FriendsListItem();
                 friendItem.SocialNetworkName = getSocialNetworkName();
                 friendItem.FriendName = String.Format("{0} {1}",friend.FirstName,friend.LastName);
-                friendItem.Status = friend.Online == true ? "Online" : "Offline";
+                friendItem.ID = Convert.ToString(friend.Id);
                 friendsItems.Add(friendItem);
             }
 
@@ -136,21 +136,29 @@ namespace VkExtension
             applicationContract.AddItemsToPhotosList(photosItems);
         }
 
-        public void SendMessage()
+        public void SendMessageToSelectedFriends()
         {
             if (!vk_api.IsAuthorized) return;
 
+            List<FriendsListItem> items = applicationContract.GetFriendsListItems();
             MessagesSendParams sendParams = new MessagesSendParams();
-            sendParams.UserId = vk_api.UserId;
-            sendParams.Message = "test";
 
-            try
+            foreach (FriendsListItem item in items)
             {
-                vk_api.Messages.Send(sendParams);
-            }
-            catch (VkApiException ex)
-            {
+                if (!item.SocialNetworkName.Equals(getSocialNetworkName())) continue;
+                if (!item.IsChecked) continue;
 
+                sendParams.UserId = Convert.ToInt64(item.ID);
+                sendParams.Message = applicationContract.GetMessage();
+
+                try
+                {
+                    vk_api.Messages.Send(sendParams);
+                }
+                catch (VkApiException ex)
+                {
+
+                }
             }
         }
     }

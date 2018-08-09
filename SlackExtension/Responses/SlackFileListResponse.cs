@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-using SlackAPI;
-
-namespace SlackExtension
+namespace SlackExtension.Responses
 {
     public class SlackFileListResponse
     {
@@ -16,12 +14,6 @@ namespace SlackExtension
         public Boolean Ok { get; set; }
 
         [JsonProperty("files")]
-        public SlackFile[] Files { get; set; }
-    }
-
-    public class SlackFile
-    {
-        public String thumb_80 { get; set; }
-        public String mimetype { get; set; }
+        public Models.SlackFile[] Files { get; set; }
     }
 }

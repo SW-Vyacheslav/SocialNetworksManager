@@ -30,8 +30,6 @@ namespace SocialNetworksManager
 
         public MainWindow()
         {
-            //For release
-            //SetDllsDirectory(Environment.CurrentDirectory+"\\bin");
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
@@ -148,12 +146,30 @@ namespace SocialNetworksManager
         {
             specialWindow.Close();
         }
+
+        public List<FriendsListItem> GetFriendsListItems()
+        {
+            return friendsListItems;
+        }
+
+        public string GetMessage()
+        {
+            return message_text_box.Text;
+        }
         #endregion
 
         #region EventMethods
         private void Button_RefreshExtensions_Click(object sender, RoutedEventArgs e)
         {
             RefreshExtensions();
+        }
+
+        private void Button_SendMessage_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                item.Value.SendMessageToSelectedFriends();
+            }
         }
 
         private void Button_Auth_Click(object sender, RoutedEventArgs e)

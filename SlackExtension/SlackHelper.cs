@@ -7,8 +7,6 @@ using System.Text.RegularExpressions;
 
 using SocialNetworksManager.Contracts;
 
-using SlackAPI;
-
 using Helpers;
 
 using Newtonsoft.Json;
@@ -18,14 +16,11 @@ namespace SlackExtension
     public class SlackHelper
     {
         private IApplicationContract applicationContract;
-        private SlackGetTokenResponse getTokenResponse;
+        private Responses.SlackGetTokenResponse getTokenResponse;
 
         public Boolean IsAuthorized
         {
-            get
-            {
-                return getTokenResponse.Ok;
-            }
+            get { return getTokenResponse.Ok; }
         }
 
         public SlackHelper(IApplicationContract applicationContract)
@@ -37,15 +32,14 @@ namespace SlackExtension
         public void Authorize()
         {
             String state = Guid.NewGuid().ToString();
-            SlackScope scopes = SlackScope.Identify | SlackScope.Post | SlackScope.Client | SlackScope.Read;
-            
-            Uri auth_uri = SlackClient.GetAuthorizeUri
-            (
-                Properties.AppSettings.Default.client_id,
-                scopes,
-                Properties.AppSettings.Default.redirect_uri,
-                state
-            );
+
+            Dictionary<String, String> auth_parameters = new Dictionary<string, string>();
+            auth_parameters["client_id"] = Properties.AppSettings.Default.client_id;
+            auth_parameters["scope"] = "identify,post,client,read";
+            auth_parameters["redirect_uri"] = Properties.AppSettings.Default.redirect_uri;
+            auth_parameters["state"] = state;
+
+            Uri auth_uri = GetAuthUri(auth_parameters);
 
             Dictionary<String, String> codeParams = new Dictionary<string, string>();
             codeParams["code"] = "";
@@ -63,26 +57,26 @@ namespace SlackExtension
             parameters["redirect_uri"] = Properties.AppSettings.Default.redirect_uri;
             parameters["code"] = codeParams["code"];
 
-            Uri token_get_uri = GetSlackApiUri("oauth.access", parameters);
+            Uri token_get_uri = GetApiUri("oauth.access", parameters);
 
-            getTokenResponse = JsonConvert.DeserializeObject<SlackGetTokenResponse>(NetHelper.GetRequest(token_get_uri));
+            getTokenResponse = JsonConvert.DeserializeObject<Responses.SlackGetTokenResponse>(NetHelper.GetRequest(token_get_uri));
         }
 
-        public List<User> GetUsers()
+        public List<Models.SlackUser> GetUsers()
         {
             if (!getTokenResponse.Ok) return null;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = getTokenResponse.AccessToken;
 
-            Uri get_users_uri = GetSlackApiUri("users.list", parameters);
+            Uri get_users_uri = GetApiUri("users.list", parameters);
 
-            UserListResponse userListResponse = JsonConvert.DeserializeObject<UserListResponse>(NetHelper.GetRequest(get_users_uri));
+            Responses.SlackUserListResponse userListResponse = JsonConvert.DeserializeObject<Responses.SlackUserListResponse>(NetHelper.GetRequest(get_users_uri));
 
-            return userListResponse.members.ToList();
+            return userListResponse.Members.ToList();
         }
 
-        public List<SlackFile> GetPhotos()
+        public List<Models.SlackFile> GetPhotos()
         {
             if (!getTokenResponse.Ok) return null;
 
@@ -90,23 +84,52 @@ namespace SlackExtension
             parameters["token"] = getTokenResponse.AccessToken;
             parameters["types"] = "images";
 
-            Uri get_files_uri = GetSlackApiUri("files.list", parameters);
+            Uri get_files_uri = GetApiUri("files.list", parameters);
 
-            String data = NetHelper.GetRequest(get_files_uri);
+            Responses.SlackFileListResponse fileListResponse = JsonConvert.DeserializeObject<Responses.SlackFileListResponse>(NetHelper.GetRequest(get_files_uri));
 
-            SlackFileListResponse fileListResponse = JsonConvert.DeserializeObject<SlackFileListResponse>(data);
+            List<Models.SlackFile> files = new List<Models.SlackFile>();
 
-            List<SlackFile> files = new List<SlackFile>();
-
-            foreach (SlackFile file in fileListResponse.Files)
+            foreach (Models.SlackFile file in fileListResponse.Files)
             {
-                if (file.mimetype.Contains("image")) files.Add(file);
+                if (file.MimeType.Contains("image")) files.Add(file);
             }
 
             return files;
         }
 
-        public static Uri GetSlackApiUri(String method, Dictionary<String,String> parameters)
+        public Boolean SendMessage(String channel_id,String message)
+        {
+            if (!getTokenResponse.Ok) return false;
+
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            parameters["token"] = getTokenResponse.AccessToken;
+            parameters["channel"] = channel_id;
+            parameters["text"] = message;
+
+            Uri send_message_uri = GetApiUri("chat.meMessage", parameters);
+
+            NetHelper.GetRequest(send_message_uri);
+
+            return true;
+        }
+
+        public List<Models.SlackIM> GetIms()
+        {
+            if (!getTokenResponse.Ok) return null;
+
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            parameters["token"] = getTokenResponse.AccessToken;
+
+            Uri get_channels_uri = GetApiUri("im.list", parameters);
+
+            Responses.SlackIMListResponse listResponse = JsonConvert.DeserializeObject<Responses.SlackIMListResponse>(NetHelper.GetRequest(get_channels_uri));
+            
+            if (!listResponse.Ok) return null;
+            else return listResponse.IMs.ToList();
+        }
+
+        public static Uri GetApiUri(String method, Dictionary<String,String> parameters)
         {
             StringBuilder uri = new StringBuilder();
             uri.AppendFormat("https://slack.com/api/{0}?",method);
@@ -115,6 +138,20 @@ namespace SlackExtension
             {
                 if (i != 0) uri.Append('&');
                 uri.AppendFormat("{0}={1}",parameters.ElementAt(i).Key,parameters.ElementAt(i).Value);
+            }
+
+            return new Uri(uri.ToString());
+        }
+
+        public static Uri GetAuthUri(Dictionary<String, String> parameters)
+        {
+            StringBuilder uri = new StringBuilder();
+            uri.Append("https://slack.com/oauth/authorize?");
+
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (i != 0) uri.Append('&');
+                uri.AppendFormat("{0}={1}", parameters.ElementAt(i).Key, parameters.ElementAt(i).Value);
             }
 
             return new Uri(uri.ToString());
