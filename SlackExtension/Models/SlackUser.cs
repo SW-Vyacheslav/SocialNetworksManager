@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace SlackExtension.Models
 {
@@ -35,7 +32,7 @@ namespace SlackExtension.Models
         public String TimeZoneLabel { get; set; }
 
         [JsonProperty("tz_offset")]
-        public Int32 TimeZoneOffset { get; set; }
+        public Int64 TimeZoneOffset { get; set; }
 
         [JsonProperty("profile")]
         public UserProfile Profile { get; set; }
@@ -62,7 +59,8 @@ namespace SlackExtension.Models
         public Boolean IsStranger { get; set; }
 
         [JsonProperty("updated")]
-        public Int32 Updated { get; set; }
+        [JsonConverter(typeof(UnixDateTimeConverter))]
+        public DateTime Updated { get; set; }
 
         [JsonProperty("is_app_user")]
         public Boolean IsAppUser { get; set; }

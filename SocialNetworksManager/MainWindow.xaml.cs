@@ -33,13 +33,6 @@ namespace SocialNetworksManager
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
-
-            Closing += MainWindow_Closing;
-        }
-
-        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            if (CefSharp.Cef.IsInitialized) CefSharp.Cef.Shutdown();
         }
 
         #region UsualMethods

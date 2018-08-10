@@ -25,12 +25,15 @@ namespace VkExtension
     {
         private IApplicationContract applicationContract;
 
+        public Boolean IsCanceled { get; set; }
+
         public AuthControl(IApplicationContract applicationContract)
         {
             InitializeComponent();
 
             GetUserEnteredData();
             this.applicationContract = applicationContract;
+            IsCanceled = false;
         }
 
         private void Button_LogIn_Click(object sender, RoutedEventArgs e)
@@ -39,6 +42,12 @@ namespace VkExtension
             {
                 SaveUserEnteredData();
             }
+            applicationContract.CloseSpecialWindow();
+        }
+
+        private void Button_Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            IsCanceled = true;
             applicationContract.CloseSpecialWindow();
         }
 

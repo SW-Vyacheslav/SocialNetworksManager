@@ -15,5 +15,8 @@ namespace SlackExtension.Responses
 
         [JsonProperty("files")]
         public Models.SlackFile[] Files { get; set; }
+
+        [JsonProperty("error")]
+        public String Error { get; set; }
     }
 }

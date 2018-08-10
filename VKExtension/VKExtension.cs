@@ -55,6 +55,8 @@ namespace VkExtension
             AuthControl authControl = new AuthControl(applicationContract);
             applicationContract.OpenSpecialWindow(authControl);
 
+            if (authControl.IsCanceled) return;
+
             ApiAuthParams authParams = new ApiAuthParams();
             authParams.ApplicationId = Properties.AppSettings.Default.client_id;
             authParams.Login = authControl.GetLogin();
@@ -128,7 +130,7 @@ namespace VkExtension
             {
                 PhotosListItem photoItem = new PhotosListItem();
                 photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = photo.Sizes[2].Url.ToString();
+                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count-1].Url.ToString();
 
                 photosItems.Add(photoItem);
             }

@@ -7,7 +7,7 @@
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
 
-        Title="Social Networks Manager" Height="600" Width="800">
+        Title="Social Networks Manager" Height="768" Width="1024" WindowStartupLocation="CenterScreen">
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
@@ -16,6 +16,7 @@
     </Controls:MetroWindow.RightWindowCommands>
 
     <DockPanel>
+
         <TabControl>
 
             <TabItem Header="Social Networks">
@@ -70,7 +71,7 @@
                     </ListView>
                 </DockPanel>
             </TabItem>
-            
+
             <TabItem Header="Photos">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">

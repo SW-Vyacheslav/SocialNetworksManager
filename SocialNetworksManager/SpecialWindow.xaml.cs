@@ -6,32 +6,23 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Text.RegularExpressions;
-
-using SocialNetworksManager.Contracts;
+using System.Diagnostics;
 
 using Helpers;
 
-using CefSharp;
-using CefSharp.Wpf;
+using DotNetBrowser;
+using DotNetBrowser.WPF;
+
+using MahApps.Metro.Controls;
 
 namespace SocialNetworksManager
 {
-    /// <summary>
-    /// Interaction logic for SpecialWindow.xaml
-    /// </summary>
     public partial class SpecialWindow : Window
     {
-        private ChromiumWebBrowser webBrowser;
+        private BrowserView webBrowser;
         private Regex checkRegex;
         private Dictionary<String, String> parameters;
-        private Boolean isCloseWindow = false;
 
         private delegate void CloseWindowDelegate();
 
@@ -39,70 +30,40 @@ namespace SocialNetworksManager
         {
             InitializeComponent();
 
-            Closing += SpecialWindow_Closing;
             checkRegex = new Regex("^" + redirect_uri.ToString());
             this.parameters = parameters;
+            Closing += SpecialWindow_Closing;
 
-            InitBrowser();
-            webBrowser.FrameLoadEnd += WebBrowser_FrameLoadEnd;
-            webBrowser.Address = uri.ToString();
-            Thread checkThread = new Thread(checkThreadProc);
-            checkThread.IsBackground = true;
-            checkThread.Start();
+            webBrowser = new WPFBrowserView();
+            webBrowser.Browser.DocumentLoadedInFrameEvent += Browser_DocumentLoadedInFrameEvent;
+            controlHolder.Children.Add((UIElement)webBrowser.GetComponent());
+            webBrowser.Browser.LoadURL(uri.ToString());
+        }
+
+        private void SpecialWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            webBrowser.Dispose();
         }
 
         public SpecialWindow(UserControl userControl)
         {
             InitializeComponent();
-            Height = userControl.Height*2;
+            WindowStyle = WindowStyle.None;
+            Height = userControl.Height * 2;
+            Width = userControl.Width + 20;
             controlHolder.Children.Add(userControl);
         }
 
-        private void checkThreadProc()
+        private void Browser_DocumentLoadedInFrameEvent(object sender, DotNetBrowser.Events.FrameLoadEventArgs e)
         {
-            while(true)
+            if (checkRegex.Matches(e.Browser.URL).Count != 0)
             {
-                if(isCloseWindow)
-                {
-                    InvokeCloseWindow();
-                    break;
-                }
-                Thread.Sleep(50);
-            }
-        }
-
-        private void InitBrowser()
-        {
-            CefSettings settings = new CefSettings();
-
-            Cef.Initialize(settings);
-
-            webBrowser = new ChromiumWebBrowser();
-            
-            controlHolder.Children.Add(webBrowser);
-        }
-
-        private void SpecialWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            Cef.Shutdown();
-        }
-
-        private void InvokeCloseWindow()
-        {
-            CloseWindowDelegate closeWindowDelegate = new CloseWindowDelegate(Close);
-            Dispatcher.Invoke(closeWindowDelegate);
-        }
-
-        private void WebBrowser_FrameLoadEnd(object sender, CefSharp.FrameLoadEndEventArgs e)
-        {
-            if (checkRegex.Matches(e.Url).Count != 0)
-            {
-                Dictionary<String, String> uriParams = NetHelper.GetUriFields(new Uri(e.Url));
+                Dictionary<String, String> uriParams = NetHelper.GetUriFields(new Uri(e.Browser.URL));
 
                 if (uriParams.ContainsKey("error"))
                 {
                     parameters["error"] = "true";
-                    isCloseWindow = true;
+                    CloseWindow();
                     return;
                 }
 
@@ -110,15 +71,20 @@ namespace SocialNetworksManager
                 {
                     for (int j = 0; j < uriParams.Count; j++)
                     {
-                        if(parameters.ContainsKey(uriParams.ElementAt(j).Key))
+                        if (parameters.ContainsKey(uriParams.ElementAt(j).Key))
                         {
                             parameters[uriParams.ElementAt(j).Key] = uriParams.ElementAt(j).Value;
                         }
                     }
                 }
 
-                isCloseWindow = true;
+                CloseWindow();
             }
+        }
+
+        public void CloseWindow()
+        {
+            Process.GetCurrentProcess().CloseMainWindow();
         }
     }
 }

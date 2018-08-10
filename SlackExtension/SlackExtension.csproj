@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\SlackFile.cs" />
+    <Compile Include="Models\SlackFileTypes.cs" />
     <Compile Include="Models\SlackIM.cs" />
     <Compile Include="Models\SlackUser.cs" />
     <Compile Include="Models\UserProfile.cs" />
@@ -85,7 +86,6 @@
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Responses\SlackFileListResponse.cs" />
-    <Compile Include="Responses\SlackGetCodeResponse.cs" />
     <Compile Include="Responses\SlackIMListResponse.cs" />
     <Compile Include="Responses\SlackUserListResponse.cs" />
     <Compile Include="SlackExtension.cs" />
