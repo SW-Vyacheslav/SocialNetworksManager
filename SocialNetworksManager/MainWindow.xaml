@@ -11,15 +11,20 @@
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
-            <Button Content="Refresh Extensions" Click="Button_RefreshExtensions_Click"/>
+            <Button x:Name="button_refresh_extensions" Content="Refresh Extensions" Click="Button_RefreshExtensions_Click"/>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
 
     <DockPanel>
 
-        <TabControl>
+        <StackPanel DockPanel.Dock="Top" x:Name="noConnetionPage" HorizontalAlignment="Center" Visibility="Collapsed">
+            <Label FontSize="50" Content="No Internet Connection"/>
+        </StackPanel>
 
-            <TabItem Header="Social Networks">
+
+        <Controls:MetroAnimatedTabControl x:Name="pages"  SelectionChanged="pages_SelectionChanged">
+
+            <Controls:MetroTabItem Header="Social Networks">
                 <ListView x:Name="socialNetworksHolder">
                     <ListView.View>
                         <GridView AllowsColumnReorder="False">
@@ -35,14 +40,14 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-            </TabItem>
+            </Controls:MetroTabItem>
 
-            <TabItem Header="Friends">
+            <Controls:MetroTabItem Header="Friends">
                 <DockPanel>
+                    
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                        <Button Content="Select All" Click="Button_Select_All_Friends"></Button>
-                        <Button Content="Deselect All" Click="Button_Deselect_All_Friends"></Button>
-                        <Button Content="Update" Click="Button_Update_Friends"></Button>
+                        <Button Content="Select All" Click="Button_SelectAllFriends_Click"></Button>
+                        <Button Content="Deselect All" Click="Button_DeselectAllFriends_Click"></Button>
                     </StackPanel>
                     <Grid DockPanel.Dock="Bottom">
                         <Grid.ColumnDefinitions>
@@ -70,13 +75,10 @@
                         </ListView.View>
                     </ListView>
                 </DockPanel>
-            </TabItem>
+            </Controls:MetroTabItem>
 
-            <TabItem Header="Photos">
+            <Controls:MetroTabItem Header="Photos">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                        <Button Content="Update" Click="Button_Update_Photos"></Button>
-                    </StackPanel>
                     <ListView x:Name="photosList">
                         <ListView.View>
                             <GridView AllowsColumnReorder="False">
@@ -92,9 +94,9 @@
                         </ListView.View>
                     </ListView>
                 </DockPanel>
-            </TabItem>
+            </Controls:MetroTabItem>
 
-        </TabControl>
+        </Controls:MetroAnimatedTabControl>
 
     </DockPanel>
     

@@ -8,13 +8,13 @@ using Newtonsoft.Json;
 
 namespace SlackExtension.Responses
 {
-    public class SlackUserListResponse
+    public class SlackFilesListResponse
     {
         [JsonProperty("ok")]
         public Boolean Ok { get; set; }
 
-        [JsonProperty("members")]
-        public Models.SlackUser[] Members { get; set; }
+        [JsonProperty("files")]
+        public Models.SlackFile[] Files { get; set; }
 
         [JsonProperty("error")]
         public String Error { get; set; }

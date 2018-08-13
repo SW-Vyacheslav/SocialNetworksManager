@@ -143,6 +143,8 @@ namespace VkExtension
             if (!vk_api.IsAuthorized) return;
 
             List<FriendsListItem> items = applicationContract.GetFriendsListItems();
+            List<SendMessageStatus> statuses = new List<SendMessageStatus>();
+
             MessagesSendParams sendParams = new MessagesSendParams();
 
             foreach (FriendsListItem item in items)
@@ -153,15 +155,23 @@ namespace VkExtension
                 sendParams.UserId = Convert.ToInt64(item.ID);
                 sendParams.Message = applicationContract.GetMessage();
 
+                SendMessageStatus status = new SendMessageStatus();
+                status.SocialNetworkName = getSocialNetworkName();
+                status.UserName = item.FriendName;
+                status.IsMessageSended = true;
+
                 try
                 {
                     vk_api.Messages.Send(sendParams);
                 }
                 catch (VkApiException ex)
                 {
-
+                    status.IsMessageSended = false;
                 }
+
+                statuses.Add(status);
             }
+            applicationContract.AddSendMessageStatuses(statuses);
         }
     }
 }

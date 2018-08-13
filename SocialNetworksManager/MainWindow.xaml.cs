@@ -7,6 +7,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading;
 
 using SocialNetworksManager.Contracts;
 using SocialNetworksManager.DataPresentation;
@@ -25,20 +26,67 @@ namespace SocialNetworksManager
         private List<SocialNetworksListItem> socialNetworksListItems = new List<SocialNetworksListItem>();
         private List<FriendsListItem> friendsListItems = new List<FriendsListItem>();
         private List<PhotosListItem> photosListItems = new List<PhotosListItem>();
+        private List<SendMessageStatus> messagesStatuses = new List<SendMessageStatus>();
+
+        private Thread checkConnectionThread;
 
         private SpecialWindow specialWindow;
+
+        private delegate void SetNoConnectionPageVisibilityDelegate(Boolean isVisible);
 
         public MainWindow()
         {
             InitializeComponent();
             InitializeContainer();
             RefreshExtensions();
+            InitializeThreads();
         }
+
+        #region ImportedMethods
+        [System.Runtime.InteropServices.DllImport("wininet.dll")]
+        private extern static bool InternetGetConnectedState(out int Description, int ReservedValue);
+        #endregion
 
         #region UsualMethods
         private void SetDllsDirectory(String path)
         {
             Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + ";" + path);
+        }
+
+        private void SetNoConnectionPageVisibility(Boolean isVisible)
+        {
+            if (isVisible == true && noConnetionPage.Visibility != Visibility.Visible)
+            {
+                pages.Visibility = Visibility.Collapsed;
+                noConnetionPage.Visibility = Visibility.Visible;
+                button_refresh_extensions.IsEnabled = false;
+            }
+            else if(isVisible == false && noConnetionPage.Visibility != Visibility.Collapsed)
+            {
+                pages.Visibility = Visibility.Visible;
+                noConnetionPage.Visibility = Visibility.Collapsed;
+                button_refresh_extensions.IsEnabled = true;
+            }
+        }
+
+        private void CheckConnectionThreadProc()
+        {
+            int description;
+            SetNoConnectionPageVisibilityDelegate @delegate = new SetNoConnectionPageVisibilityDelegate(SetNoConnectionPageVisibility);
+
+            while (true)
+            {
+                if (InternetGetConnectedState(out description, 0)) Dispatcher.Invoke(@delegate, false);
+                else Dispatcher.Invoke(@delegate, true);
+            }
+        }
+
+        private void InitializeThreads()
+        {
+            checkConnectionThread = new Thread(CheckConnectionThreadProc);
+            checkConnectionThread.IsBackground = true;
+
+            checkConnectionThread.Start();
         }
 
         private void InitializeContainer()
@@ -110,6 +158,32 @@ namespace SocialNetworksManager
 
             return null;
         }
+
+        private void UpdateFriends()
+        {
+            friendsList.ItemsSource = null;
+            friendsListItems.Clear();
+
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                item.Value.GetFriends();
+            }
+
+            friendsList.ItemsSource = friendsListItems;
+        }
+
+        private void UpdatePhotos()
+        {
+            photosList.ItemsSource = null;
+            photosListItems.Clear();
+
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                item.Value.GetPhotos();
+            }
+
+            photosList.ItemsSource = photosListItems;
+        }
         #endregion
 
         #region ContractMethods
@@ -149,6 +223,11 @@ namespace SocialNetworksManager
         {
             return message_text_box.Text;
         }
+
+        public void AddSendMessageStatuses(List<SendMessageStatus> statuses)
+        {
+            messagesStatuses.AddRange(statuses);
+        }
         #endregion
 
         #region EventMethods
@@ -159,10 +238,22 @@ namespace SocialNetworksManager
 
         private void Button_SendMessage_Click(object sender, RoutedEventArgs e)
         {
+            messagesStatuses.Clear();
+
             foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
             {
                 item.Value.SendMessageToSelectedFriends();
             }
+
+            StringBuilder messagesStatusesString = new StringBuilder();
+
+            foreach (SendMessageStatus status in messagesStatuses)
+            {
+                messagesStatusesString.AppendFormat("{0}: Message to {1} {2}.\n",status.SocialNetworkName,status.UserName,status.IsMessageSended == true ? "Sended" : "Not Sended");
+            }
+
+            SpecialWindow specialWindow = new SpecialWindow(messagesStatusesString.ToString());
+            specialWindow.ShowDialog();
         }
 
         private void Button_Auth_Click(object sender, RoutedEventArgs e)
@@ -179,7 +270,7 @@ namespace SocialNetworksManager
             }
         }
 
-        private void Button_Select_All_Friends(object sender, RoutedEventArgs e)
+        private void Button_SelectAllFriends_Click(object sender, RoutedEventArgs e)
         {
             foreach (FriendsListItem item in friendsListItems)
             {
@@ -187,7 +278,7 @@ namespace SocialNetworksManager
             }
         }
 
-        private void Button_Deselect_All_Friends(object sender, RoutedEventArgs e)
+        private void Button_DeselectAllFriends_Click(object sender, RoutedEventArgs e)
         {
             foreach (FriendsListItem item in friendsListItems)
             {
@@ -195,30 +286,23 @@ namespace SocialNetworksManager
             }
         }
 
-        private void Button_Update_Friends(object sender, RoutedEventArgs e)
+        private void pages_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            friendsList.ItemsSource = null;
-            friendsListItems.Clear();
+            MetroAnimatedTabControl tabControl = sender as MetroAnimatedTabControl;
 
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            MetroTabItem tabItem = tabControl.SelectedItem as MetroTabItem;
+
+            switch (tabItem.Header)
             {
-                item.Value.GetFriends();
+                case "Friends":
+                    UpdateFriends();
+                    break;
+                case "Photos":
+                    UpdatePhotos();
+                    break;
+                default:
+                    break;
             }
-
-            friendsList.ItemsSource = friendsListItems;
-        }
-
-        private void Button_Update_Photos(object sender, RoutedEventArgs e)
-        {
-            photosList.ItemsSource = null;
-            photosListItems.Clear();
-            
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
-            {
-                item.Value.GetPhotos();
-            }
-
-            photosList.ItemsSource = photosListItems;
         }
         #endregion
     }

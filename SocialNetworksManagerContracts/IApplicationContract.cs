@@ -14,6 +14,8 @@ namespace SocialNetworksManager.Contracts
         List<FriendsListItem> GetFriendsListItems();
         String GetMessage();
 
+        void AddSendMessageStatuses(List<SendMessageStatus> statuses);
+
         void OpenSpecialWindow(Uri auth_uri,Uri redirect_uri, Dictionary<String,String> parameters);
         void OpenSpecialWindow(UserControl userControl);
         void CloseSpecialWindow();

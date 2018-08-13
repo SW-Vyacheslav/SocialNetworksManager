@@ -98,6 +98,7 @@ namespace SlackExtension
 
             List<FriendsListItem> items = applicationContract.GetFriendsListItems();
             List<Models.SlackIM> ims = slackHelper.GetIms();
+            List<SendMessageStatus> statuses = new List<SendMessageStatus>();
 
             foreach (FriendsListItem item in items)
             {
@@ -113,9 +114,15 @@ namespace SlackExtension
                         channel_id = im.ID;
                     }
                 }
-                
-                slackHelper.SendMessage(channel_id, applicationContract.GetMessage());
+
+                SendMessageStatus status = new SendMessageStatus();
+                status.SocialNetworkName = getSocialNetworkName();
+                status.UserName = item.FriendName;
+                status.IsMessageSended = slackHelper.SendMessage(channel_id, applicationContract.GetMessage());
+                statuses.Add(status);
             }
+
+            applicationContract.AddSendMessageStatuses(statuses);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace SlackExtension
 
             Uri get_users_uri = GetApiUri("users.list", parameters);
 
-            Responses.SlackUserListResponse userListResponse = JsonConvert.DeserializeObject<Responses.SlackUserListResponse>(NetHelper.GetRequest(get_users_uri));
+            Responses.SlackUsersListResponse userListResponse = JsonConvert.DeserializeObject<Responses.SlackUsersListResponse>(NetHelper.GetRequest(get_users_uri));
 
             if (!userListResponse.Ok) return null;
 
@@ -89,7 +89,7 @@ namespace SlackExtension
 
             Uri get_files_uri = GetApiUri("files.list", parameters);
 
-            Responses.SlackFileListResponse fileListResponse = JsonConvert.DeserializeObject<Responses.SlackFileListResponse>(NetHelper.GetRequest(get_files_uri));
+            Responses.SlackFilesListResponse fileListResponse = JsonConvert.DeserializeObject<Responses.SlackFilesListResponse>(NetHelper.GetRequest(get_files_uri));
 
             if (!fileListResponse.Ok) return null;
 
@@ -107,9 +107,10 @@ namespace SlackExtension
 
             Uri send_message_uri = GetApiUri("chat.meMessage", parameters);
 
-            NetHelper.GetRequest(send_message_uri);
+            Responses.SlackMeMessageResponse meMessageResponse = JsonConvert.DeserializeObject<Responses.SlackMeMessageResponse>(NetHelper.GetRequest(send_message_uri));
 
-            return true;
+            if (!meMessageResponse.Ok) return false;
+            else return true;
         }
 
         public List<Models.SlackIM> GetIms()

@@ -85,9 +85,10 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Responses\SlackFileListResponse.cs" />
+    <Compile Include="Responses\SlackFilesListResponse.cs" />
     <Compile Include="Responses\SlackIMListResponse.cs" />
-    <Compile Include="Responses\SlackUserListResponse.cs" />
+    <Compile Include="Responses\SlackMeMessageResponse.cs" />
+    <Compile Include="Responses\SlackUsersListResponse.cs" />
     <Compile Include="SlackExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Responses\SlackGetTokenResponse.cs" />

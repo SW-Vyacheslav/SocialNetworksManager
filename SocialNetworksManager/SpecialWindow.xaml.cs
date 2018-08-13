@@ -18,7 +18,7 @@ using MahApps.Metro.Controls;
 
 namespace SocialNetworksManager
 {
-    public partial class SpecialWindow : Window
+    public partial class SpecialWindow : MetroWindow
     {
         private BrowserView webBrowser;
         private Regex checkRegex;
@@ -32,7 +32,6 @@ namespace SocialNetworksManager
 
             checkRegex = new Regex("^" + redirect_uri.ToString());
             this.parameters = parameters;
-            Closing += SpecialWindow_Closing;
 
             webBrowser = new WPFBrowserView();
             webBrowser.Browser.DocumentLoadedInFrameEvent += Browser_DocumentLoadedInFrameEvent;
@@ -40,18 +39,24 @@ namespace SocialNetworksManager
             webBrowser.Browser.LoadURL(uri.ToString());
         }
 
-        private void SpecialWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            webBrowser.Dispose();
-        }
-
         public SpecialWindow(UserControl userControl)
         {
             InitializeComponent();
-            WindowStyle = WindowStyle.None;
+            ShowCloseButton = false;
+            ShowMinButton = false;
+            ShowMaxRestoreButton = false;
+            
             Height = userControl.Height * 2;
             Width = userControl.Width + 20;
             controlHolder.Children.Add(userControl);
+        }
+
+        public SpecialWindow(String textBlockContent)
+        {
+            InitializeComponent();
+            TextBlock label = new TextBlock();
+            label.Text = textBlockContent;
+            controlHolder.Children.Add(label);
         }
 
         private void Browser_DocumentLoadedInFrameEvent(object sender, DotNetBrowser.Events.FrameLoadEventArgs e)
