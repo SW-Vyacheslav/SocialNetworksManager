@@ -18,6 +18,7 @@ namespace SocialNetworksManager.Contracts
 
         void OpenSpecialWindow(Uri auth_uri,Uri redirect_uri, Dictionary<String,String> parameters);
         void OpenSpecialWindow(UserControl userControl);
+        void OpenSpecialWindow(String text);
         void CloseSpecialWindow();
     }
 }

@@ -57,6 +57,7 @@ namespace SocialNetworksManager
 
             TextBlock label = new TextBlock();
             label.Text = textBlockContent;
+            label.Margin = new Thickness(20);
             controlHolder.Children.Add(label);
         }
 

@@ -13,7 +13,7 @@ namespace Helpers
 
             using (MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider())
             {
-                byte[] keys = md5Provider.ComputeHash(Encoding.UTF8.GetBytes(Properties.Settings.Default.hash));
+                byte[] keys = md5Provider.ComputeHash(Encoding.UTF8.GetBytes(Properties.Resources.hash));
 
                 using (TripleDESCryptoServiceProvider desProvider = new TripleDESCryptoServiceProvider() { Key = keys, Mode = CipherMode.ECB, Padding = PaddingMode.PKCS7 })
                 {
@@ -33,7 +33,7 @@ namespace Helpers
 
             using (MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider())
             {
-                byte[] keys = md5Provider.ComputeHash(Encoding.UTF8.GetBytes(Properties.Settings.Default.hash));
+                byte[] keys = md5Provider.ComputeHash(Encoding.UTF8.GetBytes(Properties.Resources.hash));
 
                 using (TripleDESCryptoServiceProvider desProvider = new TripleDESCryptoServiceProvider() { Key = keys, Mode = CipherMode.ECB, Padding = PaddingMode.PKCS7 })
                 {

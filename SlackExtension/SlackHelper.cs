@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 using SocialNetworksManager.Contracts;
 
@@ -30,9 +28,9 @@ namespace SlackExtension
             String state = Guid.NewGuid().ToString();
 
             Dictionary<String, String> auth_parameters = new Dictionary<string, string>();
-            auth_parameters["client_id"] = Properties.AppSettings.Default.client_id;
+            auth_parameters["client_id"] = Properties.Resources.client_id;
             auth_parameters["scope"] = "files:read,chat:write:user,im:read,users:read";
-            auth_parameters["redirect_uri"] = Properties.AppSettings.Default.redirect_uri;
+            auth_parameters["redirect_uri"] = Properties.Resources.redirect_uri;
             auth_parameters["state"] = state;
 
             Uri auth_uri = GetAuthUri(auth_parameters);
@@ -42,14 +40,14 @@ namespace SlackExtension
             codeParams["state"] = "";
             codeParams["error"] = "";
 
-            applicationContract.OpenSpecialWindow(auth_uri,new Uri(Properties.AppSettings.Default.redirect_uri),codeParams);
+            applicationContract.OpenSpecialWindow(auth_uri,new Uri(Properties.Resources.redirect_uri),codeParams);
 
             if (codeParams["error"] != "" || codeParams["code"] == "" || codeParams["state"] != state) return;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
-            parameters["client_id"] = Properties.AppSettings.Default.client_id;
-            parameters["client_secret"] = Properties.AppSettings.Default.client_secret;
-            parameters["redirect_uri"] = Properties.AppSettings.Default.redirect_uri;
+            parameters["client_id"] = Properties.Resources.client_id;
+            parameters["client_secret"] = Properties.Resources.client_secret;
+            parameters["redirect_uri"] = Properties.Resources.redirect_uri;
             parameters["code"] = codeParams["code"];
 
             Uri token_get_uri = GetApiUri("oauth.access", parameters);

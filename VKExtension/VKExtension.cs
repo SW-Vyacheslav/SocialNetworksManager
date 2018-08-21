@@ -58,7 +58,7 @@ namespace VkExtension
             if (authControl.IsCanceled) return;
 
             ApiAuthParams authParams = new ApiAuthParams();
-            authParams.ApplicationId = Properties.AppSettings.Default.client_id;
+            authParams.ApplicationId = Convert.ToUInt64(Properties.Resources.client_id);
             authParams.Login = authControl.GetLogin();
             authParams.Password = authControl.GetPassword();
             authParams.Settings = Settings.All;
@@ -69,7 +69,7 @@ namespace VkExtension
             }
             catch (VkApiException ex)
             {
-                
+                applicationContract.OpenSpecialWindow("Vk Auth Error.");
             }
         }
 

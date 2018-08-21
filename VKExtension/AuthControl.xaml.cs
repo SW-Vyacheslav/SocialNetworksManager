@@ -56,7 +56,7 @@ namespace VkExtension
             String userData = String.Format("{0}:{1}", GetLogin(), GetPassword());
             userData = Helpers.DataHelper.EncryptData(userData);
 
-            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\Extensions\\userdata", FileMode.Create, FileAccess.Write))
+            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\userdata", FileMode.Create, FileAccess.Write))
             {
                 using (StreamWriter writer = new StreamWriter(fileStream))
                 {
@@ -67,9 +67,9 @@ namespace VkExtension
 
         private void GetUserEnteredData()
         {
-            if (!File.Exists(Environment.CurrentDirectory + "\\Extensions\\userdata")) return;
+            if (!File.Exists(Environment.CurrentDirectory + "\\userdata")) return;
 
-            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\Extensions\\userdata", FileMode.Open, FileAccess.Read))
+            using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\userdata", FileMode.Open, FileAccess.Read))
             {
                 using (StreamReader reader = new StreamReader(fileStream))
                 {

@@ -32,13 +32,16 @@ namespace SocialNetworksManager
         private Thread checkConnectionThread;
         private SpecialWindow specialWindow;
 
+        private Boolean IsContainerInitialized = false;
+
         private delegate void SetNoConnectionPageVisibilityDelegate(Boolean isVisible);
 
         public MainWindow()
         {
             InitializeComponent();
             InitializeContainer();
-            RefreshExtensions();
+            if (!IsContainerInitialized) pages.IsEnabled = false;
+            else RefreshExtensions();
             InitializeThreads();
         }
 
@@ -81,23 +84,25 @@ namespace SocialNetworksManager
 
         private void InitializeContainer()
         {
-            String dirPath = Environment.CurrentDirectory + "\\Extensions";
+            String dirPath = Environment.CurrentDirectory + "\\bin";
 
             if (!Directory.Exists(dirPath))
             {
                 Directory.CreateDirectory(dirPath);
                 MessageBox.Show("Extensions directory does not exists.\nExtensions did not loaded.");
+                IsContainerInitialized = false;
                 return;
             }
             if (Directory.GetFiles(dirPath).Length == 0)
             {
                 MessageBox.Show("There are no extensions.");
+                IsContainerInitialized = false;
                 return;
             }
 
-            directoryCatalog     =  new DirectoryCatalog(dirPath);
-            compositionContainer =  new CompositionContainer(directoryCatalog);
-            importManager        =  new ImportManager();
+            directoryCatalog = new DirectoryCatalog(dirPath);
+            compositionContainer = new CompositionContainer(directoryCatalog);
+            importManager = new ImportManager();
 
             try
             {
@@ -108,10 +113,19 @@ namespace SocialNetworksManager
                 MessageBox.Show(ex.Message,"Error");
                 Environment.Exit(1);
             }
+
+            IsContainerInitialized = true;
         }
 
         private void RefreshExtensions()
         {
+            if (!IsContainerInitialized)
+            {
+                InitializeContainer();
+                if (!IsContainerInitialized) return;
+                else pages.IsEnabled = true;
+            }
+
             if (directoryCatalog == null) return;
             directoryCatalog.Refresh();
             socialNetworksHolder.ItemsSource = null;
@@ -196,6 +210,12 @@ namespace SocialNetworksManager
         public void OpenSpecialWindow(UserControl userControl)
         {
             specialWindow = new SpecialWindow(userControl);
+            specialWindow.ShowDialog();
+        }
+
+        public void OpenSpecialWindow(String text)
+        {
+            SpecialWindow specialWindow = new SpecialWindow(text);
             specialWindow.ShowDialog();
         }
 
@@ -295,7 +315,7 @@ namespace SocialNetworksManager
 
         private void pages_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(e.Source is MetroAnimatedTabControl)
+            if (e.Source is MetroAnimatedTabControl)
             {
                 MetroAnimatedTabControl tabControl = sender as MetroAnimatedTabControl;
                 MetroTabItem tabItem = tabControl.SelectedItem as MetroTabItem;

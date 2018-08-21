@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel.Composition;
-using System.Windows;
 
 using SocialNetworksManager.Contracts;
 using SocialNetworksManager.DataPresentation;
-
-using System.Threading;
 
 namespace SlackExtension
 {
@@ -47,7 +41,9 @@ namespace SlackExtension
             if (GetAuthStatus()) return;
 
             slackHelper = new SlackHelper(applicationContract);
-            slackHelper.Authorize();      
+            slackHelper.Authorize();
+
+            if (!GetAuthStatus()) applicationContract.OpenSpecialWindow("Slack Auth Error.");
         }
 
         public void GetFriends()
