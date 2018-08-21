@@ -54,6 +54,7 @@ namespace VkExtension
         private void SaveUserEnteredData()
         {
             String userData = String.Format("{0}:{1}", GetLogin(), GetPassword());
+            userData = Helpers.DataHelper.EncryptData(userData);
 
             using (FileStream fileStream = new FileStream(Environment.CurrentDirectory + "\\Extensions\\userdata", FileMode.Create, FileAccess.Write))
             {
@@ -73,6 +74,7 @@ namespace VkExtension
                 using (StreamReader reader = new StreamReader(fileStream))
                 {
                     String userData = reader.ReadToEnd();
+                    userData = Helpers.DataHelper.DecryptData(userData);
                     login.Text = userData.Split(':')[0];
                     password.Password = userData.Split(':')[1];
                 }

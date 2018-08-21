@@ -80,11 +80,11 @@ namespace SlackExtension
 
             foreach (Models.SlackFile file in files)
             {
-                if (!file.IsPublic) continue;
-
                 PhotosListItem photoItem = new PhotosListItem();
                 photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = file.PermalinkPublic;
+
+                String[] permalink_split = file.PermalinkPublic.Split('-');
+                photoItem.PhotoSource = String.Format("{0}?pub_secret={1}", file.URLPrivate, permalink_split[permalink_split.Length-1]);
 
                 photosItems.Add(photoItem);
             }

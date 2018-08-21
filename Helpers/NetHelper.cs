@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 
 namespace Helpers
 {
@@ -110,5 +109,8 @@ namespace Helpers
 
             return responseString;
         }
+
+        [System.Runtime.InteropServices.DllImport("wininet.dll")]
+        public extern static bool InternetGetConnectedState(out int Description, int ReservedValue);
     }
 }

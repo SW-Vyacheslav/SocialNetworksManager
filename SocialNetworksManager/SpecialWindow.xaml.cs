@@ -45,15 +45,16 @@ namespace SocialNetworksManager
             ShowCloseButton = false;
             ShowMinButton = false;
             ShowMaxRestoreButton = false;
-            
-            Height = userControl.Height * 2;
-            Width = userControl.Width + 20;
+            SizeToContent = SizeToContent.WidthAndHeight;
+
             controlHolder.Children.Add(userControl);
         }
 
         public SpecialWindow(String textBlockContent)
         {
             InitializeComponent();
+            SizeToContent = SizeToContent.WidthAndHeight;
+
             TextBlock label = new TextBlock();
             label.Text = textBlockContent;
             controlHolder.Children.Add(label);

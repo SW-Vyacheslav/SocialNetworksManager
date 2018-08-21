@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VkExtension"
-             mc:Ignorable="d" d:DesignWidth="350" Height="80" Width="355">
+             mc:Ignorable="d" d:DesignWidth="350" Height="90" Width="355">
 
     <StackPanel>
 
@@ -19,7 +19,7 @@
             <PasswordBox Width="190" x:Name="password" Grid.Column="1" Grid.Row="1"  VerticalContentAlignment="Center"></PasswordBox>
             <Button Width="65" Grid.Column="2" Grid.Row="1" Margin="1" Click="Button_Cancel_Click">Cancel</Button>
         </StackPanel>
-        <CheckBox x:Name="remember_check_box" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Right" Content="Remember"></CheckBox>
+        <CheckBox x:Name="remember_check_box" Grid.Column="2" Grid.Row="2" Content="Remember" Margin="5"></CheckBox>
     </StackPanel>
 
 </UserControl>

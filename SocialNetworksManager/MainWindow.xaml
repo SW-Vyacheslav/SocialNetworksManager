@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SocialNetworksManager"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:Material="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
 
         Title="Social Networks Manager" Height="768" Width="1024" WindowStartupLocation="CenterScreen">
@@ -21,8 +22,7 @@
             <Label FontSize="50" Content="No Internet Connection"/>
         </StackPanel>
 
-
-        <Controls:MetroAnimatedTabControl x:Name="pages"  SelectionChanged="pages_SelectionChanged">
+        <Controls:MetroAnimatedTabControl x:Name="pages" SelectionChanged="pages_SelectionChanged">
 
             <Controls:MetroTabItem Header="Social Networks">
                 <ListView x:Name="socialNetworksHolder">
@@ -79,11 +79,18 @@
 
             <Controls:MetroTabItem Header="Photos">
                 <DockPanel>
+                    <Image x:Name="bigPhoto" Visibility="Collapsed">
+                        <Image.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Close" Click="Button_PhotoFullSizeClose_Click"></MenuItem>
+                            </ContextMenu>
+                        </Image.ContextMenu>
+                    </Image>
                     <ListView x:Name="photosList">
                         <ListView.View>
                             <GridView AllowsColumnReorder="False">
                                 <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
-                                <GridViewColumn Header="Photo">
+                                <GridViewColumn Header="Photo" Width="250">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Image Source="{Binding Path=PhotoSource}"></Image>
@@ -92,6 +99,11 @@
                                 </GridViewColumn>
                             </GridView>
                         </ListView.View>
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Full Size" Click="Button_PhotoFullSize_Click"></MenuItem>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
                     </ListView>
                 </DockPanel>
             </Controls:MetroTabItem>

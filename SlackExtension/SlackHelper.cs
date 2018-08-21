@@ -31,7 +31,7 @@ namespace SlackExtension
 
             Dictionary<String, String> auth_parameters = new Dictionary<string, string>();
             auth_parameters["client_id"] = Properties.AppSettings.Default.client_id;
-            auth_parameters["scope"] = "identify,post,client,read";
+            auth_parameters["scope"] = "files:read,chat:write:user,im:read,users:read";
             auth_parameters["redirect_uri"] = Properties.AppSettings.Default.redirect_uri;
             auth_parameters["state"] = state;
 

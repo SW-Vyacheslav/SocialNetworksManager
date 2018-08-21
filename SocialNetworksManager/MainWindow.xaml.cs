@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Windows.Controls;
 using System.ComponentModel.Composition;
@@ -24,12 +25,11 @@ namespace SocialNetworksManager
         private ImportManager        importManager        = null;
 
         private List<SocialNetworksListItem> socialNetworksListItems = new List<SocialNetworksListItem>();
-        private List<FriendsListItem> friendsListItems = new List<FriendsListItem>();
-        private List<PhotosListItem> photosListItems = new List<PhotosListItem>();
-        private List<SendMessageStatus> messagesStatuses = new List<SendMessageStatus>();
+        private List<FriendsListItem>        friendsListItems        = new List<FriendsListItem>();
+        private List<PhotosListItem>         photosListItems         = new List<PhotosListItem>();
+        private List<SendMessageStatus>      messagesStatuses        = new List<SendMessageStatus>();
 
         private Thread checkConnectionThread;
-
         private SpecialWindow specialWindow;
 
         private delegate void SetNoConnectionPageVisibilityDelegate(Boolean isVisible);
@@ -42,17 +42,7 @@ namespace SocialNetworksManager
             InitializeThreads();
         }
 
-        #region ImportedMethods
-        [System.Runtime.InteropServices.DllImport("wininet.dll")]
-        private extern static bool InternetGetConnectedState(out int Description, int ReservedValue);
-        #endregion
-
         #region UsualMethods
-        private void SetDllsDirectory(String path)
-        {
-            Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + ";" + path);
-        }
-
         private void SetNoConnectionPageVisibility(Boolean isVisible)
         {
             if (isVisible == true && noConnetionPage.Visibility != Visibility.Visible)
@@ -61,7 +51,7 @@ namespace SocialNetworksManager
                 noConnetionPage.Visibility = Visibility.Visible;
                 button_refresh_extensions.IsEnabled = false;
             }
-            else if(isVisible == false && noConnetionPage.Visibility != Visibility.Collapsed)
+            else if (isVisible == false && noConnetionPage.Visibility != Visibility.Collapsed)
             {
                 pages.Visibility = Visibility.Visible;
                 noConnetionPage.Visibility = Visibility.Collapsed;
@@ -76,7 +66,7 @@ namespace SocialNetworksManager
 
             while (true)
             {
-                if (InternetGetConnectedState(out description, 0)) Dispatcher.Invoke(@delegate, false);
+                if (Helpers.NetHelper.InternetGetConnectedState(out description, 0)) Dispatcher.Invoke(@delegate, false);
                 else Dispatcher.Invoke(@delegate, true);
             }
         }
@@ -286,22 +276,41 @@ namespace SocialNetworksManager
             }
         }
 
+        private void Button_PhotoFullSize_Click(object sender, RoutedEventArgs e)
+        {
+            if (photosList.SelectedItems.Count == 0) return;
+            bigPhoto.Visibility = Visibility.Visible;
+            photosList.Visibility = Visibility.Collapsed;
+            PhotosListItem list_item = photosList.SelectedItem as PhotosListItem;
+            Uri source_uri = new Uri(list_item.PhotoSource);
+            bigPhoto.Source = new BitmapImage(source_uri);
+        }
+
+        private void Button_PhotoFullSizeClose_Click(object sender, RoutedEventArgs e)
+        {
+            bigPhoto.Visibility = Visibility.Collapsed;
+            photosList.Visibility = Visibility.Visible;
+            bigPhoto.Source = null;
+        }
+
         private void pages_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            MetroAnimatedTabControl tabControl = sender as MetroAnimatedTabControl;
-
-            MetroTabItem tabItem = tabControl.SelectedItem as MetroTabItem;
-
-            switch (tabItem.Header)
+            if(e.Source is MetroAnimatedTabControl)
             {
-                case "Friends":
-                    UpdateFriends();
-                    break;
-                case "Photos":
-                    UpdatePhotos();
-                    break;
-                default:
-                    break;
+                MetroAnimatedTabControl tabControl = sender as MetroAnimatedTabControl;
+                MetroTabItem tabItem = tabControl.SelectedItem as MetroTabItem;
+
+                switch (tabItem.Header)
+                {
+                    case "Friends":
+                        UpdateFriends();
+                        break;
+                    case "Photos":
+                        UpdatePhotos();
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         #endregion

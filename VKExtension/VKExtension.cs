@@ -79,6 +79,7 @@ namespace VkExtension
 
             FriendsGetParams getParams = new FriendsGetParams();
             getParams.Fields = ProfileFields.FirstName | ProfileFields.LastName | ProfileFields.Online;
+            getParams.Order = FriendsOrder.Name;
 
             VkCollection<User> friends = null;
 
@@ -88,7 +89,7 @@ namespace VkExtension
             }
             catch (VkApiException ex)
             {
-                
+                return;
             }
 
             List<FriendsListItem> friendsItems = new List<FriendsListItem>();
@@ -109,28 +110,58 @@ namespace VkExtension
         {
             if (!vk_api.IsAuthorized) return;
 
-            PhotoGetParams getParams = new PhotoGetParams();
-            getParams.AlbumId = PhotoAlbumType.Profile;
-            getParams.PhotoSizes = true;
+            PhotoGetParams getParamsProfile = new PhotoGetParams();
+            getParamsProfile.AlbumId = PhotoAlbumType.Profile;
+            getParamsProfile.PhotoSizes = true;
 
-            VkCollection<Photo> photos = null;
+            PhotoGetParams getParamsWall = new PhotoGetParams();
+            getParamsWall.AlbumId = PhotoAlbumType.Wall;
+            getParamsWall.PhotoSizes = true;
+
+            PhotoGetParams getParamsSaved = new PhotoGetParams();
+            getParamsSaved.AlbumId = PhotoAlbumType.Saved;
+            getParamsSaved.PhotoSizes = true;
+
+            VkCollection<Photo> photosProfile = null;
+            VkCollection<Photo> photosWall = null;
+            VkCollection<Photo> photosSaved = null;
 
             try
             {
-                photos = vk_api.Photo.Get(getParams, true);
+                photosProfile = vk_api.Photo.Get(getParamsProfile, true);
+                photosWall = vk_api.Photo.Get(getParamsWall, true);
+                photosSaved = vk_api.Photo.Get(getParamsSaved, true);
             }
             catch(VkApiException ex)
             {
-
+                return;
             }
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            foreach (Photo photo in photos)
+            foreach (Photo photo in photosProfile)
             {
                 PhotosListItem photoItem = new PhotosListItem();
                 photoItem.SocialNetworkName = getSocialNetworkName();
                 photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count-1].Url.ToString();
+
+                photosItems.Add(photoItem);
+            }
+
+            foreach (Photo photo in photosWall)
+            {
+                PhotosListItem photoItem = new PhotosListItem();
+                photoItem.SocialNetworkName = getSocialNetworkName();
+                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count - 1].Url.ToString();
+
+                photosItems.Add(photoItem);
+            }
+
+            foreach (Photo photo in photosSaved)
+            {
+                PhotosListItem photoItem = new PhotosListItem();
+                photoItem.SocialNetworkName = getSocialNetworkName();
+                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count - 1].Url.ToString();
 
                 photosItems.Add(photoItem);
             }

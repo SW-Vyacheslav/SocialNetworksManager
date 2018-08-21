@@ -120,6 +120,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Helpers\Helpers.csproj">
+      <Project>{b67e47fe-6d4c-4995-8813-e9f30d15c549}</Project>
+      <Name>Helpers</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SocialNetworksManagerContracts\SocialNetworksManagerContracts.csproj">
       <Project>{85d6c429-ec9f-4839-b6bf-6997da2cdd5e}</Project>
       <Name>SocialNetworksManagerContracts</Name>
