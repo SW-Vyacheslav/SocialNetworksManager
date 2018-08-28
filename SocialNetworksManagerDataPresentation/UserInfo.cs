@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace SocialNetworksManager.DataPresentation
 {
-    public class SendMessageStatus
+    public class UserInfo
     {
         public String SocialNetworkName { get; set; }
-        public String UserNameTo { get; set; }
-        public String UserNameFrom { get; set; }
-        public Boolean IsMessageSended { get; set; }
+        public String ID { get; set; }
+        public String Name { get; set; }
     }
 }

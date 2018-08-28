@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers", "Helpers\Helpers.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialNetworksManagerDataPresentation", "SocialNetworksManagerDataPresentation\SocialNetworksManagerDataPresentation.csproj", "{4FB2EC52-D061-4947-B8B5-E9AF14F3FB7A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialNetworksManager2", "SocialNetworksManager2\SocialNetworksManager2.csproj", "{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,14 @@ Global
 		{4FB2EC52-D061-4947-B8B5-E9AF14F3FB7A}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{4FB2EC52-D061-4947-B8B5-E9AF14F3FB7A}.Release|x86.ActiveCfg = Release|x86
 		{4FB2EC52-D061-4947-B8B5-E9AF14F3FB7A}.Release|x86.Build.0 = Release|x86
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Debug|x86.Build.0 = Debug|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Release|x86.ActiveCfg = Release|Any CPU
+		{701796B1-0932-46E3-B2AD-DB6BC17FA4DD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

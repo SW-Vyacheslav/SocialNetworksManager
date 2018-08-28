@@ -16,6 +16,18 @@ namespace SlackExtension.Responses
         [JsonProperty("access_token")]
         public String AccessToken { get; set; }
 
+        [JsonProperty("scope")]
+        public String Scope { get; set; }
+
+        [JsonProperty("user_id")]
+        public String UserID { get; set; }
+
+        [JsonProperty("team_name")]
+        public String TeamName { get; set; }
+
+        [JsonProperty("team_id")]
+        public String TeamID { get; set; }
+
         [JsonProperty("error")]
         public String Error { get; set; }
     }

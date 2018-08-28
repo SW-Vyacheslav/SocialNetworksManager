@@ -29,7 +29,7 @@
                     <ListView.View>
                         <GridView AllowsColumnReorder="False">
                             <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=Name}"/>
-                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}"/>
+                            <GridViewColumn Header="Authorized Users" DisplayMemberBinding="{Binding Path=AuthorizedUsersNames}"></GridViewColumn>
                             <GridViewColumn>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -63,7 +63,8 @@
                         <ListView.View>
                             <GridView AllowsColumnReorder="False">
                                 <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
-                                <GridViewColumn Header="Friend Name" DisplayMemberBinding="{Binding Path=FriendName}"/>
+                                <GridViewColumn Header="User Name" DisplayMemberBinding="{Binding Path=User.Name}"/>
+                                <GridViewColumn Header="Friend Name" DisplayMemberBinding="{Binding Path=Friend.Name}"/>
                                 <GridViewColumn>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -79,32 +80,36 @@
 
             <Controls:MetroTabItem Header="Photos">
                 <DockPanel>
-                    <Image x:Name="bigPhoto" Visibility="Collapsed">
-                        <Image.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Close" Click="Button_PhotoFullSizeClose_Click"></MenuItem>
-                            </ContextMenu>
-                        </Image.ContextMenu>
-                    </Image>
-                    <ListView x:Name="photosList">
-                        <ListView.View>
-                            <GridView AllowsColumnReorder="False">
-                                <GridViewColumn Header="Social Network" DisplayMemberBinding="{Binding Path=SocialNetworkName}"/>
-                                <GridViewColumn Header="Photo" Width="250">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Image Source="{Binding Path=PhotoSource}"></Image>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                        <ListView.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Full Size" Click="Button_PhotoFullSize_Click"></MenuItem>
-                            </ContextMenu>
-                        </ListView.ContextMenu>
-                    </ListView>
+
+                    <ScrollViewer DockPanel.Dock="Left" VerticalScrollBarVisibility="Visible" MinWidth="200">
+                        <StackPanel>
+                            <StackPanel Grid.Row="0">
+                                <Label Content="My Photos"></Label>
+                                <Separator/>
+                                <TreeView x:Name="myphotos_socialnetworks_buttons"></TreeView>
+                            </StackPanel>
+                            <Border Grid.Row="1" Margin="0,5"></Border>
+                            <StackPanel Grid.Row="2">
+                                <Label Content="Friends Photos"></Label>
+                                <Separator/>
+                                <TreeView x:Name="friendsphotos_socialnetworks_buttons"></TreeView>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="User Name:"></Label>
+                            <TextBlock x:Name="username_textbox" VerticalAlignment="Center"></TextBlock>
+                        </StackPanel>
+                        
+                        <ScrollViewer VerticalScrollBarVisibility="Visible">
+                            <WrapPanel x:Name="photos_holder">
+
+                            </WrapPanel>
+                        </ScrollViewer>
+                    </StackPanel>
+
                 </DockPanel>
             </Controls:MetroTabItem>
 

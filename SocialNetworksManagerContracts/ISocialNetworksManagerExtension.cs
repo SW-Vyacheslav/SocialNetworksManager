@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
+
+using SocialNetworksManager.DataPresentation;
 
 namespace SocialNetworksManager.Contracts
 {
@@ -7,12 +10,11 @@ namespace SocialNetworksManager.Contracts
     {
         String getExtensionName();
         String getSocialNetworkName();
-
-        bool GetAuthStatus();
+        List<UserInfo> getAuthorizedUsers();
 
         void Authorization();
         void GetFriends();
-        void GetPhotos();
+        void GetPhotos(String user_id);
         void SendMessageToSelectedFriends();
     }
 }

@@ -5,7 +5,6 @@ using SocialNetworksManager.DataPresentation;
 
 namespace SocialNetworksManager.Contracts
 {
-
     public interface IApplicationContract
     {
         void AddItemsToFriendsList(List<FriendsListItem> items);

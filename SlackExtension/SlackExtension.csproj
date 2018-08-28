@@ -88,6 +88,7 @@
     <Compile Include="Responses\SlackFilesListResponse.cs" />
     <Compile Include="Responses\SlackIMListResponse.cs" />
     <Compile Include="Responses\SlackMeMessageResponse.cs" />
+    <Compile Include="Responses\SlackUsersInfoResponse.cs" />
     <Compile Include="Responses\SlackUsersListResponse.cs" />
     <Compile Include="SlackExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

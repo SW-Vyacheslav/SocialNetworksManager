@@ -130,19 +130,13 @@ namespace SocialNetworksManager
             directoryCatalog.Refresh();
             socialNetworksHolder.ItemsSource = null;
 
-            List<SocialNetworksListItem> oldList = socialNetworksListItems;
             socialNetworksListItems = new List<SocialNetworksListItem>();
             
             foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
             {
                 SocialNetworksListItem methodsItem = new SocialNetworksListItem();
                 methodsItem.Name = extension.Value.getSocialNetworkName();
-                methodsItem.Status = extension.Value.GetAuthStatus() == true ? "Authorized" : "Not Authorized";
-
-                foreach (SocialNetworksListItem item in oldList)
-                {
-                    if (methodsItem.Name == item.Name) methodsItem.IsButtonEnabled = item.IsButtonEnabled;
-                }
+                methodsItem.AuthorizedUsers = extension.Value.getAuthorizedUsers();
                 
                 socialNetworksListItems.Add(methodsItem);
             }
@@ -178,15 +172,53 @@ namespace SocialNetworksManager
 
         private void UpdatePhotos()
         {
-            photosList.ItemsSource = null;
-            photosListItems.Clear();
+            myphotos_socialnetworks_buttons.Items.Clear();
+            friendsphotos_socialnetworks_buttons.Items.Clear();
 
             foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
             {
-                item.Value.GetPhotos();
+                String socNetName = item.Value.getSocialNetworkName();
+                List<UserInfo> socNetUsers = item.Value.getAuthorizedUsers();
+
+                TreeViewItem treeViewItem = new TreeViewItem();
+                treeViewItem.Header = socNetName;
+
+                foreach (UserInfo userInfo in socNetUsers)
+                {
+                    ButtonWithUserInfo buttonWithUserInfo = new ButtonWithUserInfo();
+                    buttonWithUserInfo.User = userInfo;
+                    buttonWithUserInfo.Content = userInfo.Name;
+                    buttonWithUserInfo.Click += ButtonWithUserInfo_Click;
+                    
+                    treeViewItem.Items.Add(buttonWithUserInfo);
+                }
+
+                myphotos_socialnetworks_buttons.Items.Add(treeViewItem);
             }
 
-            photosList.ItemsSource = photosListItems;
+            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            {
+                String socNetName = item.Value.getSocialNetworkName();
+
+                friendsListItems.Clear();
+                item.Value.GetFriends();
+
+                TreeViewItem treeViewItem = new TreeViewItem();
+                treeViewItem.Header = socNetName;
+
+                foreach (FriendsListItem listItem in friendsListItems)
+                {
+                    ButtonWithUserInfo buttonWithUserInfo = new ButtonWithUserInfo();
+                    buttonWithUserInfo.User = listItem.Friend;
+                    buttonWithUserInfo.Content = listItem.Friend.Name;
+                    buttonWithUserInfo.User.SocialNetworkName = item.Value.getSocialNetworkName();
+                    buttonWithUserInfo.Click += ButtonWithUserInfo_Click;
+
+                    treeViewItem.Items.Add(buttonWithUserInfo);
+                }
+
+                friendsphotos_socialnetworks_buttons.Items.Add(treeViewItem);
+            }
         }
         #endregion
 
@@ -204,7 +236,14 @@ namespace SocialNetworksManager
         public void OpenSpecialWindow(Uri uri, Uri redirect_uri, Dictionary<String, String> parameters)
         {
             specialWindow = new SpecialWindow(uri,redirect_uri,parameters);
-            specialWindow.ShowDialog();
+            try
+            {
+                specialWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                OpenSpecialWindow(ex.Message);
+            }
         }
 
         public void OpenSpecialWindow(UserControl userControl)
@@ -241,6 +280,28 @@ namespace SocialNetworksManager
         #endregion
 
         #region EventMethods
+        private void ButtonWithUserInfo_Click(object sender, RoutedEventArgs e)
+        {
+            ButtonWithUserInfo buttonWithUserInfo = sender as ButtonWithUserInfo;
+
+            photosListItems.Clear();
+            photos_holder.Children.Clear();
+
+            username_textbox.Text = buttonWithUserInfo.User.Name;
+            findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).GetPhotos(buttonWithUserInfo.User.ID);
+            
+            for (int i = 0; i < photosListItems.Count; i++)
+            {
+                Image photo = new Image();
+                photo.Source = photosListItems[i].Photo;
+                photo.Width = 200;
+                photo.Height = 200;
+                photo.Margin = new Thickness(5);
+                
+                photos_holder.Children.Add(photo);
+            }
+        }
+
         private void Button_RefreshExtensions_Click(object sender, RoutedEventArgs e)
         {
             RefreshExtensions();
@@ -259,7 +320,7 @@ namespace SocialNetworksManager
 
             foreach (SendMessageStatus status in messagesStatuses)
             {
-                messagesStatusesString.AppendFormat("{0}: Message to {1} {2}.\n",status.SocialNetworkName,status.UserName,status.IsMessageSended == true ? "Sended" : "Not Sended");
+                messagesStatusesString.AppendFormat("{0}: Message from {1} to {2} {3}.\n",status.SocialNetworkName,status.UserNameFrom,status.UserNameTo,status.IsMessageSended == true ? "Sended" : "Not Sended");
             }
 
             SpecialWindow specialWindow = new SpecialWindow(messagesStatusesString.ToString());
@@ -272,12 +333,8 @@ namespace SocialNetworksManager
             SocialNetworksListItem item = (button).DataContext as SocialNetworksListItem;
             ISocialNetworksManagerExtension extension = findSocialNetworkExtensionByName(item.Name);
             extension.Authorization();
-            if (extension.GetAuthStatus())
-            {
-                item.Status = "Authorized";
-                item.IsButtonEnabled = false;
-                button.IsEnabled = false;
-            }
+
+            item.AuthorizedUsers = extension.getAuthorizedUsers();
         }
 
         private void Button_SelectAllFriends_Click(object sender, RoutedEventArgs e)
@@ -294,23 +351,6 @@ namespace SocialNetworksManager
             {
                 item.IsChecked = false;
             }
-        }
-
-        private void Button_PhotoFullSize_Click(object sender, RoutedEventArgs e)
-        {
-            if (photosList.SelectedItems.Count == 0) return;
-            bigPhoto.Visibility = Visibility.Visible;
-            photosList.Visibility = Visibility.Collapsed;
-            PhotosListItem list_item = photosList.SelectedItem as PhotosListItem;
-            Uri source_uri = new Uri(list_item.PhotoSource);
-            bigPhoto.Source = new BitmapImage(source_uri);
-        }
-
-        private void Button_PhotoFullSizeClose_Click(object sender, RoutedEventArgs e)
-        {
-            bigPhoto.Visibility = Visibility.Collapsed;
-            photosList.Visibility = Visibility.Visible;
-            bigPhoto.Source = null;
         }
 
         private void pages_SelectionChanged(object sender, SelectionChangedEventArgs e)

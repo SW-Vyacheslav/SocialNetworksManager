@@ -13,9 +13,9 @@ namespace SocialNetworksManager.DataPresentation
     {
         private Boolean _isChecked;
 
-        public String ID { get; set; }
         public String SocialNetworkName { get; set; }
-        public String FriendName { get; set; }
+        public UserInfo Friend { get; set; }
+        public UserInfo User { get; set; }
 
         public Boolean IsChecked
         {

@@ -11,9 +11,7 @@ namespace SocialNetworksManager.DataPresentation
     public class SocialNetworksListItem : INotifyPropertyChanged
     {
         private String _name;
-        private String _status;
-
-        public Boolean IsButtonEnabled { get; set; }
+        private List<UserInfo> _authorized_users;
 
         public String Name
         {
@@ -25,19 +23,31 @@ namespace SocialNetworksManager.DataPresentation
             }
         }
 
-        public String Status
+        public List<UserInfo> AuthorizedUsers
         {
-            get { return _status; }
+            get { return _authorized_users; }
             set
             {
-                _status = value;
-                OnPropertyChanged("Status");
+                _authorized_users = value;
+                OnPropertyChanged("AuthorizedUsers");
+                OnPropertyChanged("AuthorizedUsersNames");
             }
         }
 
-        public SocialNetworksListItem()
+        public String AuthorizedUsersNames
         {
-            IsButtonEnabled = true;
+            get
+            {
+                StringBuilder names = new StringBuilder();
+
+                for (int i = 0; i < _authorized_users.Count; i++)
+                {
+                    names.Append(_authorized_users[i].Name);
+                    if (i != _authorized_users.Count - 1) names.Append(',');
+                }
+
+                return names.ToString();
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

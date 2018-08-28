@@ -16,11 +16,14 @@ namespace SlackExtension
         private IApplicationContract applicationContract;
         private String _access_token;
 
+        public Models.SlackUser User { get; set; }
+
         public Boolean IsAuthorized { get; set; }
 
         public SlackHelper(IApplicationContract applicationContract)
         {
             this.applicationContract = applicationContract;
+            User = new Models.SlackUser();
         }
 
         public void Authorize()
@@ -58,6 +61,9 @@ namespace SlackExtension
             {
                 IsAuthorized = true;
                 _access_token = getTokenResponse.AccessToken;
+                User.ID = getTokenResponse.UserID;
+                User.RealName = GetUserInfo(getTokenResponse.UserID).RealName;
+                User.TeamID = getTokenResponse.TeamID;
             }
         }
 
@@ -77,13 +83,14 @@ namespace SlackExtension
             return userListResponse.Members.ToList();
         }
 
-        public List<Models.SlackFile> GetPhotos()
+        public List<Models.SlackFile> GetPhotos(String user_id)
         {
             if (!IsAuthorized) return null;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
             parameters["types"] = "images";
+            parameters["user"] = user_id;
 
             Uri get_files_uri = GetApiUri("files.list", parameters);
 
@@ -124,6 +131,22 @@ namespace SlackExtension
             
             if (!imlistResponse.Ok) return null;
             else return imlistResponse.IMs.ToList();
+        }
+
+        public Models.SlackUser GetUserInfo(String user_id)
+        {
+            if (!IsAuthorized) return null;
+
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            parameters["token"] = _access_token;
+            parameters["user"] = user_id;
+
+            Uri users_info_url = GetApiUri("users.info",parameters);
+
+            Responses.SlackUsersInfoResponse usersInfoResponse = JsonConvert.DeserializeObject<Responses.SlackUsersInfoResponse>(NetHelper.GetRequest(users_info_url));
+
+            if (!usersInfoResponse.Ok) return null;
+            else return usersInfoResponse.User;
         }
 
         public static Uri GetApiUri(String method, Dictionary<String,String> parameters)

@@ -26,11 +26,15 @@ namespace VkExtension
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
         public IApplicationContract applicationContract;
 
-        private VkApi vk_api;
+        private List<VkApi> users_api;
+        private List<AccountSaveProfileInfoParams> users_accounts;
+        private Int64 users_count;
         
         public VkExtension()
         {
-            vk_api = new VkApi();
+            users_api = new List<VkApi>();
+            users_accounts = new List<AccountSaveProfileInfoParams>();
+            users_count = 0;
         }
 
         public String getSocialNetworkName()
@@ -43,25 +47,43 @@ namespace VkExtension
             return "VK_Extension";
         }
 
-        public bool GetAuthStatus()
+        public List<UserInfo> getAuthorizedUsers()
         {
-            return vk_api.IsAuthorized;
+            List<UserInfo> users = new List<UserInfo>();
+
+            for (int i = 0;i < users_count; i++)
+            {
+                if (!users_api[i].IsAuthorized) continue;
+
+                UserInfo userInfo = new UserInfo();
+                userInfo.Name = getUserAccountName(i);
+                userInfo.ID = Convert.ToString(users_api[i].UserId);
+                userInfo.SocialNetworkName = getSocialNetworkName();
+                users.Add(userInfo);
+            }
+
+            return users;
+        }
+
+        private String getUserAccountName(int index)
+        {
+            return String.Format("{0} {1}", users_accounts[index].FirstName, users_accounts[index].LastName);
         }
 
         public void Authorization()
         {
-            if (vk_api.IsAuthorized) return;
-
             AuthControl authControl = new AuthControl(applicationContract);
             applicationContract.OpenSpecialWindow(authControl);
 
             if (authControl.IsCanceled) return;
 
+            VkApi vk_api = new VkApi();
+
             ApiAuthParams authParams = new ApiAuthParams();
             authParams.ApplicationId = Convert.ToUInt64(Properties.Resources.client_id);
             authParams.Login = authControl.GetLogin();
             authParams.Password = authControl.GetPassword();
-            authParams.Settings = Settings.All;
+            authParams.Settings = Settings.Friends | Settings.Photos | Settings.Wall | Settings.Messages;
 
             try
             {
@@ -70,98 +92,120 @@ namespace VkExtension
             catch (VkApiException ex)
             {
                 applicationContract.OpenSpecialWindow("Vk Auth Error.");
+                return;
             }
+
+            for (int i = 0; i < users_count; i++)
+            {
+                if (users_api[i].UserId.Equals(vk_api.UserId))
+                {
+                    applicationContract.OpenSpecialWindow("You already authorized.");
+                    return;
+                }
+            }
+
+            users_api.Add(vk_api);
+            users_accounts.Add(vk_api.Account.GetProfileInfo());
+            users_count++;
         }
 
         public void GetFriends()
         {
-            if (!vk_api.IsAuthorized) return;
-
-            FriendsGetParams getParams = new FriendsGetParams();
-            getParams.Fields = ProfileFields.FirstName | ProfileFields.LastName | ProfileFields.Online;
-            getParams.Order = FriendsOrder.Name;
-
-            VkCollection<User> friends = null;
-
-            try
+            for (int i = 0;i < users_count; i++)
             {
-                friends = vk_api.Friends.Get(getParams, true);
-            }
-            catch (VkApiException ex)
-            {
-                return;
-            }
+                if (!users_api[i].IsAuthorized) continue;
 
-            List<FriendsListItem> friendsItems = new List<FriendsListItem>();
+                FriendsGetParams getParams = new FriendsGetParams();
+                getParams.Fields = ProfileFields.FirstName | ProfileFields.LastName;
+                getParams.Order = FriendsOrder.Name;
 
-            foreach (User friend in friends)
-            {
-                FriendsListItem friendItem = new FriendsListItem();
-                friendItem.SocialNetworkName = getSocialNetworkName();
-                friendItem.FriendName = String.Format("{0} {1}",friend.FirstName,friend.LastName);
-                friendItem.ID = Convert.ToString(friend.Id);
-                friendsItems.Add(friendItem);
+                VkCollection<User> friends = null;
+
+                try
+                {
+                    friends = users_api[i].Friends.Get(getParams, true);
+                }
+                catch (VkApiException ex)
+                {
+                    continue;
+                }
+
+                List<FriendsListItem> friendsItems = new List<FriendsListItem>();
+
+                foreach (User friend in friends)
+                {
+                    FriendsListItem friendItem = new FriendsListItem();
+                    friendItem.User = new UserInfo();
+                    friendItem.Friend = new UserInfo();
+                    friendItem.SocialNetworkName = getSocialNetworkName();
+                    friendItem.Friend.Name = String.Format("{0} {1}", friend.FirstName, friend.LastName);
+                    friendItem.Friend.ID = Convert.ToString(friend.Id);
+                    friendItem.User.Name = getUserAccountName(i);
+                    friendItem.User.ID = Convert.ToString(users_api[i].UserId);
+                    friendsItems.Add(friendItem);
+                }
+
+                applicationContract.AddItemsToFriendsList(friendsItems);
             }
-
-            applicationContract.AddItemsToFriendsList(friendsItems);
         }
 
-        public void GetPhotos()
+        public void GetPhotos(string user_id)
         {
-            if (!vk_api.IsAuthorized) return;
+            VkCollection<Photo> photos = null;
 
-            PhotoGetParams getParamsProfile = new PhotoGetParams();
-            getParamsProfile.AlbumId = PhotoAlbumType.Profile;
-            getParamsProfile.PhotoSizes = true;
+            Boolean isFriends = false;
 
-            PhotoGetParams getParamsWall = new PhotoGetParams();
-            getParamsWall.AlbumId = PhotoAlbumType.Wall;
-            getParamsWall.PhotoSizes = true;
-
-            PhotoGetParams getParamsSaved = new PhotoGetParams();
-            getParamsSaved.AlbumId = PhotoAlbumType.Saved;
-            getParamsSaved.PhotoSizes = true;
-
-            VkCollection<Photo> photosProfile = null;
-            VkCollection<Photo> photosWall = null;
-            VkCollection<Photo> photosSaved = null;
-
-            try
+            for (int i = 0; i < users_api.Count; i++)
             {
-                photosProfile = vk_api.Photo.Get(getParamsProfile, true);
-                photosWall = vk_api.Photo.Get(getParamsWall, true);
-                photosSaved = vk_api.Photo.Get(getParamsSaved, true);
+                if (users_api[i].Friends.AreFriends(new List<long>() { Convert.ToInt64(user_id) })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend)
+                {
+                    PhotoGetAllParams getAllParams = new PhotoGetAllParams();
+                    getAllParams.OwnerId = Convert.ToInt64(user_id);
+                    getAllParams.PhotoSizes = true;
+
+                    try
+                    {
+                        photos = users_api[i].Photo.GetAll(getAllParams);
+                    }
+                    catch (VkApiException ex)
+                    {
+                        return;
+                    }
+
+                    isFriends = true;
+
+                    break;
+                }
             }
-            catch(VkApiException ex)
+
+            if (!isFriends)
             {
-                return;
+                for (int i = 0; i < users_api.Count; i++)
+                {
+                    if (users_api[i].UserId == Convert.ToInt64(user_id))
+                    {
+                        PhotoGetAllParams getAllParams = new PhotoGetAllParams();
+                        getAllParams.PhotoSizes = true;
+
+                        try
+                        {
+                            photos = users_api[i].Photo.GetAll(getAllParams);
+                        }
+                        catch (VkApiException ex)
+                        {
+                            return;
+                        }
+
+                        break;
+                    }
+                }
             }
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            foreach (Photo photo in photosProfile)
+            foreach (Photo photo in photos)
             {
-                PhotosListItem photoItem = new PhotosListItem();
-                photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count-1].Url.ToString();
-
-                photosItems.Add(photoItem);
-            }
-
-            foreach (Photo photo in photosWall)
-            {
-                PhotosListItem photoItem = new PhotosListItem();
-                photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count - 1].Url.ToString();
-
-                photosItems.Add(photoItem);
-            }
-
-            foreach (Photo photo in photosSaved)
-            {
-                PhotosListItem photoItem = new PhotosListItem();
-                photoItem.SocialNetworkName = getSocialNetworkName();
-                photoItem.PhotoSource = photo.Sizes[photo.Sizes.Count - 1].Url.ToString();
+                PhotosListItem photoItem = new PhotosListItem(photo.Sizes[photo.Sizes.Count - 1].Url);
 
                 photosItems.Add(photoItem);
             }
@@ -171,38 +215,43 @@ namespace VkExtension
 
         public void SendMessageToSelectedFriends()
         {
-            if (!vk_api.IsAuthorized) return;
-
-            List<FriendsListItem> items = applicationContract.GetFriendsListItems();
-            List<SendMessageStatus> statuses = new List<SendMessageStatus>();
-
-            MessagesSendParams sendParams = new MessagesSendParams();
-
-            foreach (FriendsListItem item in items)
+            for (int i = 0; i < users_count; i++)
             {
-                if (!item.SocialNetworkName.Equals(getSocialNetworkName())) continue;
-                if (!item.IsChecked) continue;
+                if (!users_api[i].IsAuthorized) continue;
 
-                sendParams.UserId = Convert.ToInt64(item.ID);
-                sendParams.Message = applicationContract.GetMessage();
+                List<FriendsListItem> items = applicationContract.GetFriendsListItems();
+                List<SendMessageStatus> statuses = new List<SendMessageStatus>();
 
-                SendMessageStatus status = new SendMessageStatus();
-                status.SocialNetworkName = getSocialNetworkName();
-                status.UserName = item.FriendName;
-                status.IsMessageSended = true;
+                MessagesSendParams sendParams = new MessagesSendParams();
 
-                try
+                foreach (FriendsListItem item in items)
                 {
-                    vk_api.Messages.Send(sendParams);
-                }
-                catch (VkApiException ex)
-                {
-                    status.IsMessageSended = false;
-                }
+                    if (!item.SocialNetworkName.Equals(getSocialNetworkName())) continue;
+                    if (!item.IsChecked) continue;
+                    if (item.User.ID != Convert.ToString(users_api[i].UserId)) continue;
 
-                statuses.Add(status);
+                    sendParams.UserId = Convert.ToInt64(item.Friend.ID);
+                    sendParams.Message = applicationContract.GetMessage();
+
+                    SendMessageStatus status = new SendMessageStatus();
+                    status.SocialNetworkName = getSocialNetworkName();
+                    status.UserNameTo = item.Friend.Name;
+                    status.UserNameFrom = getUserAccountName(i);
+                    status.IsMessageSended = true;
+
+                    try
+                    {
+                        users_api[i].Messages.Send(sendParams);
+                    }
+                    catch (VkApiException ex)
+                    {
+                        status.IsMessageSended = false;
+                    }
+
+                    statuses.Add(status);
+                }
+                applicationContract.AddSendMessageStatuses(statuses);
             }
-            applicationContract.AddSendMessageStatuses(statuses);
         }
     }
 }

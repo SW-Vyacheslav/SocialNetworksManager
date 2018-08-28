@@ -10,7 +10,11 @@ namespace SocialNetworksManager.DataPresentation
 {
     public class PhotosListItem
     {
-        public String SocialNetworkName { get; set; }
-        public String PhotoSource { get; set; }
+        public BitmapImage Photo { get; private set; }
+
+        public PhotosListItem(Uri photo_path)
+        {
+            Photo = new BitmapImage(photo_path);
+        }
     }
 }
