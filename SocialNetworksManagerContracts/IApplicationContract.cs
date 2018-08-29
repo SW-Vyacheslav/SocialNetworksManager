@@ -9,6 +9,8 @@ namespace SocialNetworksManager.Contracts
     {
         void AddItemsToFriendsList(List<FriendsListItem> items);
         void AddItemsToPhotosList(List<PhotosListItem> items);
+        void ClearItemsFromPhotosList();
+        void SetPhotosListSatusData(String data);
 
         List<FriendsListItem> GetFriendsListItems();
         String GetMessage();

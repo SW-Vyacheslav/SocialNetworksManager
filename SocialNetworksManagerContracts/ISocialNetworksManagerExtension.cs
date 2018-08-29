@@ -15,6 +15,7 @@ namespace SocialNetworksManager.Contracts
         void Authorization();
         void GetFriends();
         void GetPhotos(String user_id);
+        void RefreshPhotos(String user_id);
         void SendMessageToSelectedFriends();
     }
 }

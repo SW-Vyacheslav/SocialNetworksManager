@@ -189,7 +189,7 @@ namespace SocialNetworksManager
                     buttonWithUserInfo.User = userInfo;
                     buttonWithUserInfo.Content = userInfo.Name;
                     buttonWithUserInfo.Click += ButtonWithUserInfo_Click;
-                    
+
                     treeViewItem.Items.Add(buttonWithUserInfo);
                 }
 
@@ -277,15 +277,59 @@ namespace SocialNetworksManager
         {
             messagesStatuses.AddRange(statuses);
         }
+
+        public void ClearItemsFromPhotosList()
+        {
+            photos_holder.Children.Clear();
+        }
+
+        public void SetPhotosListSatusData(String data)
+        {
+            photoslist_satus_data.Content = data;
+        }
         #endregion
 
         #region EventMethods
+        private void ButtonWithUserInfo_RefreshPhotos_Click(object sender, RoutedEventArgs e)
+        {
+            ButtonWithUserInfo buttonWithUserInfo = sender as ButtonWithUserInfo;
+
+            if (buttonWithUserInfo.User == null) return;
+
+            photosListItems.Clear();
+            findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).RefreshPhotos(buttonWithUserInfo.User.ID);
+
+            for (int i = 0; i < photosListItems.Count; i++)
+            {
+                Image photo = new Image();
+                photo.Source = photosListItems[i].Photo;
+                photo.Style = FindResource("PhotoStyle") as Style;
+
+                photos_holder.Children.Add(photo);
+            }
+        }
+
         private void ButtonWithUserInfo_Click(object sender, RoutedEventArgs e)
         {
             ButtonWithUserInfo buttonWithUserInfo = sender as ButtonWithUserInfo;
 
+            if (buttonWithUserInfo.User == null) return;
+
+            refresh_photos_button.User = new UserInfo()
+            {
+                ID = buttonWithUserInfo.User.ID,
+                Name = buttonWithUserInfo.User.Name,
+                SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName
+            };
+
+            next_photos_button.User = new UserInfo()
+            {
+                ID = buttonWithUserInfo.User.ID,
+                Name = buttonWithUserInfo.User.Name,
+                SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName
+            };
+
             photosListItems.Clear();
-            photos_holder.Children.Clear();
 
             username_textbox.Text = buttonWithUserInfo.User.Name;
             findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).GetPhotos(buttonWithUserInfo.User.ID);
@@ -294,9 +338,7 @@ namespace SocialNetworksManager
             {
                 Image photo = new Image();
                 photo.Source = photosListItems[i].Photo;
-                photo.Width = 200;
-                photo.Height = 200;
-                photo.Margin = new Thickness(5);
+                photo.Style = FindResource("PhotoStyle") as Style;
                 
                 photos_holder.Children.Add(photo);
             }

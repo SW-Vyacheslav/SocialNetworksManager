@@ -26,15 +26,40 @@ namespace VkExtension
         [Import(typeof(IApplicationContract), AllowRecomposition = true)]
         public IApplicationContract applicationContract;
 
+        //For many users
         private List<VkApi> users_api;
         private List<AccountSaveProfileInfoParams> users_accounts;
         private Int64 users_count;
-        
+
+        //For photos loading
+        private String current_photos_user_id = "";
+        private Int64 photos_show_count = 20;
+        private Int64 current_photos_offset = 0;
+        private List<Photo> current_user_photos = null;
+        private PhotoGetParams wallPhotosGetParams = null;
+        private PhotoGetParams profilePhotosGetParams = null;
+        private PhotoGetParams savedPhotosGetParams = null;
+        private PhotoGetAlbumsParams albumsGetParams = null;
+
         public VkExtension()
         {
             users_api = new List<VkApi>();
             users_accounts = new List<AccountSaveProfileInfoParams>();
             users_count = 0;
+
+            current_user_photos = new List<Photo>();
+
+            wallPhotosGetParams = new PhotoGetParams();
+            profilePhotosGetParams = new PhotoGetParams();
+            savedPhotosGetParams = new PhotoGetParams();
+            wallPhotosGetParams.AlbumId = PhotoAlbumType.Wall;
+            profilePhotosGetParams.AlbumId = PhotoAlbumType.Profile;
+            savedPhotosGetParams.AlbumId = PhotoAlbumType.Saved;
+            wallPhotosGetParams.PhotoSizes = true;
+            profilePhotosGetParams.PhotoSizes = true;
+            savedPhotosGetParams.PhotoSizes = true;
+
+            albumsGetParams = new PhotoGetAlbumsParams();
         }
 
         public String getSocialNetworkName()
@@ -83,7 +108,7 @@ namespace VkExtension
             authParams.ApplicationId = Convert.ToUInt64(Properties.Resources.client_id);
             authParams.Login = authControl.GetLogin();
             authParams.Password = authControl.GetPassword();
-            authParams.Settings = Settings.Friends | Settings.Photos | Settings.Wall | Settings.Messages;
+            authParams.Settings = Settings.Friends | Settings.Photos | Settings.Wall | Settings.Messages | Settings.Groups;
 
             try
             {
@@ -149,67 +174,134 @@ namespace VkExtension
             }
         }
 
-        public void GetPhotos(string user_id)
+        public void RefreshPhotos(String user_id)
         {
-            VkCollection<Photo> photos = null;
+            applicationContract.ClearItemsFromPhotosList();
+            current_photos_user_id = "";
+            current_photos_offset = 0;
+            GetPhotos(user_id);
+        }
 
-            Boolean isFriends = false;
-
-            for (int i = 0; i < users_api.Count; i++)
+        public void GetPhotos(String user_id)
+        {
+            if(user_id != current_photos_user_id)
             {
-                if (users_api[i].Friends.AreFriends(new List<long>() { Convert.ToInt64(user_id) })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend)
-                {
-                    PhotoGetAllParams getAllParams = new PhotoGetAllParams();
-                    getAllParams.OwnerId = Convert.ToInt64(user_id);
-                    getAllParams.PhotoSizes = true;
+                long owner_id = Convert.ToInt64(user_id);
+                wallPhotosGetParams.OwnerId = owner_id;
+                profilePhotosGetParams.OwnerId = owner_id;
+                savedPhotosGetParams.OwnerId = owner_id;
 
-                    try
-                    {
-                        photos = users_api[i].Photo.GetAll(getAllParams);
-                    }
-                    catch (VkApiException ex)
-                    {
-                        return;
-                    }
+                current_photos_user_id = user_id;
+                current_photos_offset = 0;
 
-                    isFriends = true;
+                current_user_photos.Clear();
+                applicationContract.ClearItemsFromPhotosList();
 
-                    break;
-                }
-            }
+                albumsGetParams.OwnerId = owner_id;
+                List<PhotoAlbum> user_albums = new List<PhotoAlbum>();
 
-            if (!isFriends)
-            {
                 for (int i = 0; i < users_api.Count; i++)
                 {
-                    if (users_api[i].UserId == Convert.ToInt64(user_id))
+                    //If friends
+                    if (users_api[i].Friends.AreFriends(new List<long>() { Convert.ToInt64(user_id) })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend)
                     {
-                        PhotoGetAllParams getAllParams = new PhotoGetAllParams();
-                        getAllParams.PhotoSizes = true;
-
                         try
                         {
-                            photos = users_api[i].Photo.GetAll(getAllParams);
+                            user_albums.AddRange(users_api[i].Photo.GetAlbums(albumsGetParams).ToList());
+
+                            if (user_albums.Count != 0)
+                            {
+                                for (int j = 0; j < user_albums.Count; j++)
+                                {
+                                    PhotoGetParams photoGetParams = new PhotoGetParams();
+                                    photoGetParams.OwnerId = owner_id;
+                                    photoGetParams.PhotoSizes = true;
+                                    photoGetParams.AlbumId = PhotoAlbumType.Id((long)user_albums[j].Id);
+
+                                    current_user_photos.AddRange(users_api[i].Photo.Get(photoGetParams).ToList());
+                                }
+                            }
+
+                            current_user_photos.AddRange(users_api[i].Photo.Get(profilePhotosGetParams).ToList());
+                            current_user_photos.AddRange(users_api[i].Photo.Get(wallPhotosGetParams).ToList());
                         }
                         catch (VkApiException ex)
                         {
-                            return;
+                            applicationContract.OpenSpecialWindow(ex.Message);
                         }
 
                         break;
                     }
                 }
+
+                if (current_user_photos.Count == 0)
+                {
+                    for (int i = 0; i < users_api.Count; i++)
+                    {
+                        //If authorized user
+                        if (users_api[i].UserId == Convert.ToInt64(user_id))
+                        {
+                            try
+                            {
+                                user_albums.AddRange(users_api[i].Photo.GetAlbums(albumsGetParams).ToList());
+
+                                if (user_albums.Count != 0)
+                                {
+                                    for (int j = 0; j < user_albums.Count; j++)
+                                    {
+                                        PhotoGetParams photoGetParams = new PhotoGetParams();
+                                        photoGetParams.OwnerId = owner_id;
+                                        photoGetParams.PhotoSizes = true;
+                                        photoGetParams.AlbumId = PhotoAlbumType.Id((long)user_albums[j].Id);
+
+                                        current_user_photos.AddRange(users_api[i].Photo.Get(photoGetParams).ToList());
+                                    }
+                                }
+
+                                current_user_photos.AddRange(users_api[i].Photo.Get(profilePhotosGetParams).ToList());
+                                current_user_photos.AddRange(users_api[i].Photo.Get(wallPhotosGetParams).ToList());
+                                current_user_photos.AddRange(users_api[i].Photo.Get(savedPhotosGetParams).ToList());
+                            }
+                            catch (VkApiException ex)
+                            {
+                                applicationContract.OpenSpecialWindow(ex.Message);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                current_photos_offset += photos_show_count;
+            }
+            else
+            {
+                current_photos_offset += photos_show_count;
+            }
+
+            if (current_user_photos.Count == 0)
+            {
+                applicationContract.ClearItemsFromPhotosList();
+                applicationContract.SetPhotosListSatusData("0/0");
+                return;
             }
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            foreach (Photo photo in photos)
+            int from_pos = (int)current_photos_offset - (int)photos_show_count;
+            int to_pos = (int)current_photos_offset - 1;
+
+            if (from_pos > current_user_photos.Count - 1) return;
+            if (to_pos > current_user_photos.Count - 1) to_pos = current_user_photos.Count - 1;
+
+            for (int i = from_pos; i <= to_pos; i++)
             {
-                PhotosListItem photoItem = new PhotosListItem(photo.Sizes[photo.Sizes.Count - 1].Url);
+                PhotosListItem photoItem = new PhotosListItem(current_user_photos[i].Sizes[current_user_photos[i].Sizes.Count - 1].Url);
 
                 photosItems.Add(photoItem);
             }
 
+            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}",to_pos+1,current_user_photos.Count));
             applicationContract.AddItemsToPhotosList(photosItems);
         }
 

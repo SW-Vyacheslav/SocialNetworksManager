@@ -6,9 +6,40 @@
         xmlns:local="clr-namespace:SocialNetworksManager"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:Material="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:DP="clr-namespace:SocialNetworksManager.DataPresentation;assembly=SocialNetworksManagerDataPresentation"
         mc:Ignorable="d"
 
         Title="Social Networks Manager" Height="768" Width="1024" WindowStartupLocation="CenterScreen">
+
+    <Controls:MetroWindow.Resources>
+        <Style x:Key="PhotoStyle" TargetType="Image">
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="200"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="DP:ButtonWithUserInfo" BasedOn="{StaticResource MahApps.Metro.Styles.MetroButton}"></Style>
+        <Style  x:Key="LabelStyle" TargetType="Label">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Label}">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                Background="{TemplateBinding Background}" 
+                                Padding="{TemplateBinding Padding}" 
+                                SnapsToDevicePixels="true" 
+                                CornerRadius="3">   
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Controls:MetroWindow.Resources>
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
@@ -97,18 +128,33 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="User Name:"></Label>
-                            <TextBlock x:Name="username_textbox" VerticalAlignment="Center"></TextBlock>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <Label Style="{DynamicResource LabelStyle}" BorderBrush="LightGray" BorderThickness="1" VerticalContentAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="User Name:"/>
+                                            <TextBlock x:Name="username_textbox" VerticalAlignment="Center"></TextBlock>
+                                        </StackPanel>
+                                    </Label>
+                                </StackPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <DP:ButtonWithUserInfo x:Name="next_photos_button" Content="Next" Click="ButtonWithUserInfo_Click"/>
+                                    <Label x:Name="photoslist_satus_data" Width="100" Content="0/0" Style="{DynamicResource LabelStyle}" BorderBrush="LightGray" BorderThickness="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="5,0"/>
+                                    <DP:ButtonWithUserInfo x:Name="refresh_photos_button" Width="50" Margin="0,0,5,0" Click="ButtonWithUserInfo_RefreshPhotos_Click">
+                                        <Material:PackIcon Kind="Refresh"/>
+                                    </DP:ButtonWithUserInfo>
+                                </StackPanel>
+                                <Border/>
+                            </DockPanel>
+                            <Separator/>
                         </StackPanel>
                         
                         <ScrollViewer VerticalScrollBarVisibility="Visible">
-                            <WrapPanel x:Name="photos_holder">
-
-                            </WrapPanel>
+                            <WrapPanel x:Name="photos_holder"></WrapPanel>
                         </ScrollViewer>
-                    </StackPanel>
+                    </DockPanel>
 
                 </DockPanel>
             </Controls:MetroTabItem>
