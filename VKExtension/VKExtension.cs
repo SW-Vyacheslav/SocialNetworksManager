@@ -31,35 +31,11 @@ namespace VkExtension
         private List<AccountSaveProfileInfoParams> users_accounts;
         private Int64 users_count;
 
-        //For photos loading
-        private String current_photos_user_id = "";
-        private Int64 photos_show_count = 20;
-        private Int64 current_photos_offset = 0;
-        private List<Photo> current_user_photos = null;
-        private PhotoGetParams wallPhotosGetParams = null;
-        private PhotoGetParams profilePhotosGetParams = null;
-        private PhotoGetParams savedPhotosGetParams = null;
-        private PhotoGetAlbumsParams albumsGetParams = null;
-
         public VkExtension()
         {
             users_api = new List<VkApi>();
             users_accounts = new List<AccountSaveProfileInfoParams>();
             users_count = 0;
-
-            current_user_photos = new List<Photo>();
-
-            wallPhotosGetParams = new PhotoGetParams();
-            profilePhotosGetParams = new PhotoGetParams();
-            savedPhotosGetParams = new PhotoGetParams();
-            wallPhotosGetParams.AlbumId = PhotoAlbumType.Wall;
-            profilePhotosGetParams.AlbumId = PhotoAlbumType.Profile;
-            savedPhotosGetParams.AlbumId = PhotoAlbumType.Saved;
-            wallPhotosGetParams.PhotoSizes = true;
-            profilePhotosGetParams.PhotoSizes = true;
-            savedPhotosGetParams.PhotoSizes = true;
-
-            albumsGetParams = new PhotoGetAlbumsParams();
         }
 
         public String getSocialNetworkName()
@@ -174,135 +150,51 @@ namespace VkExtension
             }
         }
 
-        public void RefreshPhotos(String user_id)
+        public void GetPhotos()
         {
-            applicationContract.ClearItemsFromPhotosList();
-            current_photos_user_id = "";
-            current_photos_offset = 0;
-            GetPhotos(user_id);
-        }
+            VkCollection<Photo> photos = null;
 
-        public void GetPhotos(String user_id)
-        {
-            if(user_id != current_photos_user_id)
+            long owner_id = Convert.ToInt64(applicationContract.GetUserID());
+
+            PhotoGetAllParams photoGetAllParams = new PhotoGetAllParams();
+            photoGetAllParams.OwnerId = owner_id;
+            photoGetAllParams.PhotoSizes = true;
+            photoGetAllParams.Offset = applicationContract.GetPhotosCount();
+
+            for (int i = 0; i < users_api.Count; i++)
             {
-                long owner_id = Convert.ToInt64(user_id);
-                wallPhotosGetParams.OwnerId = owner_id;
-                profilePhotosGetParams.OwnerId = owner_id;
-                savedPhotosGetParams.OwnerId = owner_id;
-
-                current_photos_user_id = user_id;
-                current_photos_offset = 0;
-
-                current_user_photos.Clear();
-                applicationContract.ClearItemsFromPhotosList();
-
-                albumsGetParams.OwnerId = owner_id;
-                List<PhotoAlbum> user_albums = new List<PhotoAlbum>();
-
-                for (int i = 0; i < users_api.Count; i++)
+                if 
+                ( 
+                    (users_api[i].UserId == owner_id) ||
+                    (users_api[i].Friends.AreFriends(new List<long>() { owner_id })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend) 
+                )
                 {
-                    //If friends
-                    if (users_api[i].Friends.AreFriends(new List<long>() { Convert.ToInt64(user_id) })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend)
+                    try
                     {
-                        try
-                        {
-                            user_albums.AddRange(users_api[i].Photo.GetAlbums(albumsGetParams).ToList());
-
-                            if (user_albums.Count != 0)
-                            {
-                                for (int j = 0; j < user_albums.Count; j++)
-                                {
-                                    PhotoGetParams photoGetParams = new PhotoGetParams();
-                                    photoGetParams.OwnerId = owner_id;
-                                    photoGetParams.PhotoSizes = true;
-                                    photoGetParams.AlbumId = PhotoAlbumType.Id((long)user_albums[j].Id);
-
-                                    current_user_photos.AddRange(users_api[i].Photo.Get(photoGetParams).ToList());
-                                }
-                            }
-
-                            current_user_photos.AddRange(users_api[i].Photo.Get(profilePhotosGetParams).ToList());
-                            current_user_photos.AddRange(users_api[i].Photo.Get(wallPhotosGetParams).ToList());
-                        }
-                        catch (VkApiException ex)
-                        {
-                            applicationContract.OpenSpecialWindow(ex.Message);
-                        }
-
-                        break;
+                        photos = users_api[i].Photo.GetAll(photoGetAllParams);
                     }
-                }
-
-                if (current_user_photos.Count == 0)
-                {
-                    for (int i = 0; i < users_api.Count; i++)
+                    catch (VkApiException ex)
                     {
-                        //If authorized user
-                        if (users_api[i].UserId == Convert.ToInt64(user_id))
-                        {
-                            try
-                            {
-                                user_albums.AddRange(users_api[i].Photo.GetAlbums(albumsGetParams).ToList());
-
-                                if (user_albums.Count != 0)
-                                {
-                                    for (int j = 0; j < user_albums.Count; j++)
-                                    {
-                                        PhotoGetParams photoGetParams = new PhotoGetParams();
-                                        photoGetParams.OwnerId = owner_id;
-                                        photoGetParams.PhotoSizes = true;
-                                        photoGetParams.AlbumId = PhotoAlbumType.Id((long)user_albums[j].Id);
-
-                                        current_user_photos.AddRange(users_api[i].Photo.Get(photoGetParams).ToList());
-                                    }
-                                }
-
-                                current_user_photos.AddRange(users_api[i].Photo.Get(profilePhotosGetParams).ToList());
-                                current_user_photos.AddRange(users_api[i].Photo.Get(wallPhotosGetParams).ToList());
-                                current_user_photos.AddRange(users_api[i].Photo.Get(savedPhotosGetParams).ToList());
-                            }
-                            catch (VkApiException ex)
-                            {
-                                applicationContract.OpenSpecialWindow(ex.Message);
-                            }
-
-                            break;
-                        }
+                        applicationContract.OpenSpecialWindow(ex.Message);
                     }
+
+                    break;
                 }
-
-                current_photos_offset += photos_show_count;
-            }
-            else
-            {
-                current_photos_offset += photos_show_count;
-            }
-
-            if (current_user_photos.Count == 0)
-            {
-                applicationContract.ClearItemsFromPhotosList();
-                applicationContract.SetPhotosListSatusData("0/0");
-                return;
             }
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            int from_pos = (int)current_photos_offset - (int)photos_show_count;
-            int to_pos = (int)current_photos_offset - 1;
-
-            if (from_pos > current_user_photos.Count - 1) return;
-            if (to_pos > current_user_photos.Count - 1) to_pos = current_user_photos.Count - 1;
-
-            for (int i = from_pos; i <= to_pos; i++)
+            foreach (Photo photo in photos)
             {
-                PhotosListItem photoItem = new PhotosListItem(current_user_photos[i].Sizes[current_user_photos[i].Sizes.Count - 1].Url);
+                PhotosListItem photoItem = new PhotosListItem(photo.Sizes[photo.Sizes.Count - 1].Url);
 
                 photosItems.Add(photoItem);
             }
 
-            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}",to_pos+1,current_user_photos.Count));
             applicationContract.AddItemsToPhotosList(photosItems);
+            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}", applicationContract.GetPhotosCount(),photos.TotalCount));
+
+            if (applicationContract.GetPhotosCount() == photos.TotalCount) applicationContract.DisableNextPhotosButton();
         }
 
         public void SendMessageToSelectedFriends()

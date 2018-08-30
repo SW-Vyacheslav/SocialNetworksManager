@@ -9,15 +9,16 @@ namespace SocialNetworksManager.Contracts
     {
         void AddItemsToFriendsList(List<FriendsListItem> items);
         void AddItemsToPhotosList(List<PhotosListItem> items);
-        void ClearItemsFromPhotosList();
+        void AddSendMessageStatuses(List<SendMessageStatus> statuses);
         void SetPhotosListSatusData(String data);
+        void DisableNextPhotosButton();
 
         List<FriendsListItem> GetFriendsListItems();
         String GetMessage();
+        String GetUserID();
+        UInt64 GetPhotosCount();
 
-        void AddSendMessageStatuses(List<SendMessageStatus> statuses);
-
-        void OpenSpecialWindow(Uri auth_uri,Uri redirect_uri, Dictionary<String,String> parameters);
+        void OpenSpecialWindow(Uri auth_uri, Uri redirect_uri, Dictionary<String, String> parameters);
         void OpenSpecialWindow(UserControl userControl);
         void OpenSpecialWindow(String text);
         void CloseSpecialWindow();

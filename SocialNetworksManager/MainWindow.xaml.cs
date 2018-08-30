@@ -20,20 +20,25 @@ namespace SocialNetworksManager
     [Export(typeof(IApplicationContract))]
     public partial class MainWindow : MetroWindow, IApplicationContract
     {
-        private DirectoryCatalog     directoryCatalog     = null;
-        private CompositionContainer compositionContainer = null;
-        private ImportManager        importManager        = null;
+        //MEF components
+        private DirectoryCatalog directory_catalog = null;
+        private CompositionContainer composition_container = null;
+        private ImportManager import_manager = null;
 
-        private List<SocialNetworksListItem> socialNetworksListItems = new List<SocialNetworksListItem>();
-        private List<FriendsListItem>        friendsListItems        = new List<FriendsListItem>();
-        private List<PhotosListItem>         photosListItems         = new List<PhotosListItem>();
-        private List<SendMessageStatus>      messagesStatuses        = new List<SendMessageStatus>();
+        //Lists
+        private List<SocialNetworksListItem> social_networks_list_items = new List<SocialNetworksListItem>();
+        private List<FriendsListItem> friends_list_items = new List<FriendsListItem>();
+        private List<PhotosListItem> photos_list_items = new List<PhotosListItem>();
+        private List<SendMessageStatus> messages_statuses = new List<SendMessageStatus>();
 
-        private Thread checkConnectionThread;
-        private SpecialWindow specialWindow;
-
+        //Other fields
+        private UserInfo photos_user_info = null;
+        private Int32 old_photos_list_items_count = 0;
+        private Thread check_connection_thread;
+        private SpecialWindow special_window;
         private Boolean IsContainerInitialized = false;
 
+        //Delegates
         private delegate void SetNoConnectionPageVisibilityDelegate(Boolean isVisible);
 
         public MainWindow()
@@ -76,10 +81,10 @@ namespace SocialNetworksManager
 
         private void InitializeThreads()
         {
-            checkConnectionThread = new Thread(CheckConnectionThreadProc);
-            checkConnectionThread.IsBackground = true;
+            check_connection_thread = new Thread(CheckConnectionThreadProc);
+            check_connection_thread.IsBackground = true;
 
-            checkConnectionThread.Start();
+            check_connection_thread.Start();
         }
 
         private void InitializeContainer()
@@ -100,17 +105,17 @@ namespace SocialNetworksManager
                 return;
             }
 
-            directoryCatalog = new DirectoryCatalog(dirPath);
-            compositionContainer = new CompositionContainer(directoryCatalog);
-            importManager = new ImportManager();
+            directory_catalog = new DirectoryCatalog(dirPath);
+            composition_container = new CompositionContainer(directory_catalog);
+            import_manager = new ImportManager();
 
             try
             {
-                compositionContainer.ComposeParts(this, importManager);
+                composition_container.ComposeParts(this, import_manager);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message,"Error");
+                MessageBox.Show(ex.Message, "Error");
                 Environment.Exit(1);
             }
 
@@ -126,27 +131,27 @@ namespace SocialNetworksManager
                 else pages.IsEnabled = true;
             }
 
-            if (directoryCatalog == null) return;
-            directoryCatalog.Refresh();
+            if (directory_catalog == null) return;
+            directory_catalog.Refresh();
             socialNetworksHolder.ItemsSource = null;
 
-            socialNetworksListItems = new List<SocialNetworksListItem>();
-            
-            foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
+            social_networks_list_items = new List<SocialNetworksListItem>();
+
+            foreach (Lazy<ISocialNetworksManagerExtension> extension in import_manager.extensionsCollection)
             {
                 SocialNetworksListItem methodsItem = new SocialNetworksListItem();
                 methodsItem.Name = extension.Value.getSocialNetworkName();
                 methodsItem.AuthorizedUsers = extension.Value.getAuthorizedUsers();
-                
-                socialNetworksListItems.Add(methodsItem);
+
+                social_networks_list_items.Add(methodsItem);
             }
 
-            socialNetworksHolder.ItemsSource = socialNetworksListItems;
+            socialNetworksHolder.ItemsSource = social_networks_list_items;
         }
 
         private ISocialNetworksManagerExtension findSocialNetworkExtensionByName(String name)
         {
-            foreach (Lazy<ISocialNetworksManagerExtension> extension in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> extension in import_manager.extensionsCollection)
             {
                 if (extension.Value.getSocialNetworkName().Equals(name))
                 {
@@ -160,14 +165,14 @@ namespace SocialNetworksManager
         private void UpdateFriends()
         {
             friendsList.ItemsSource = null;
-            friendsListItems.Clear();
+            friends_list_items.Clear();
 
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> item in import_manager.extensionsCollection)
             {
                 item.Value.GetFriends();
             }
 
-            friendsList.ItemsSource = friendsListItems;
+            friendsList.ItemsSource = friends_list_items;
         }
 
         private void UpdatePhotos()
@@ -175,7 +180,7 @@ namespace SocialNetworksManager
             myphotos_socialnetworks_buttons.Items.Clear();
             friendsphotos_socialnetworks_buttons.Items.Clear();
 
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> item in import_manager.extensionsCollection)
             {
                 String socNetName = item.Value.getSocialNetworkName();
                 List<UserInfo> socNetUsers = item.Value.getAuthorizedUsers();
@@ -196,17 +201,17 @@ namespace SocialNetworksManager
                 myphotos_socialnetworks_buttons.Items.Add(treeViewItem);
             }
 
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> item in import_manager.extensionsCollection)
             {
                 String socNetName = item.Value.getSocialNetworkName();
 
-                friendsListItems.Clear();
+                friends_list_items.Clear();
                 item.Value.GetFriends();
 
                 TreeViewItem treeViewItem = new TreeViewItem();
                 treeViewItem.Header = socNetName;
 
-                foreach (FriendsListItem listItem in friendsListItems)
+                foreach (FriendsListItem listItem in friends_list_items)
                 {
                     ButtonWithUserInfo buttonWithUserInfo = new ButtonWithUserInfo();
                     buttonWithUserInfo.User = listItem.Friend;
@@ -225,20 +230,20 @@ namespace SocialNetworksManager
         #region ContractMethods
         public void AddItemsToFriendsList(List<FriendsListItem> items)
         {
-            friendsListItems.AddRange(items);
+            friends_list_items.AddRange(items);
         }
 
         public void AddItemsToPhotosList(List<PhotosListItem> items)
         {
-            photosListItems.AddRange(items);
+            photos_list_items.AddRange(items);
         }
 
         public void OpenSpecialWindow(Uri uri, Uri redirect_uri, Dictionary<String, String> parameters)
         {
-            specialWindow = new SpecialWindow(uri,redirect_uri,parameters);
+            special_window = new SpecialWindow(uri, redirect_uri, parameters);
             try
             {
-                specialWindow.ShowDialog();
+                special_window.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -248,24 +253,24 @@ namespace SocialNetworksManager
 
         public void OpenSpecialWindow(UserControl userControl)
         {
-            specialWindow = new SpecialWindow(userControl);
-            specialWindow.ShowDialog();
+            special_window = new SpecialWindow(userControl);
+            special_window.ShowDialog();
         }
 
         public void OpenSpecialWindow(String text)
         {
-            SpecialWindow specialWindow = new SpecialWindow(text);
-            specialWindow.ShowDialog();
+            special_window = new SpecialWindow(text);
+            special_window.ShowDialog();
         }
 
         public void CloseSpecialWindow()
         {
-            specialWindow.Close();
+            special_window.Close();
         }
 
         public List<FriendsListItem> GetFriendsListItems()
         {
-            return friendsListItems;
+            return friends_list_items;
         }
 
         public string GetMessage()
@@ -275,34 +280,64 @@ namespace SocialNetworksManager
 
         public void AddSendMessageStatuses(List<SendMessageStatus> statuses)
         {
-            messagesStatuses.AddRange(statuses);
-        }
-
-        public void ClearItemsFromPhotosList()
-        {
-            photos_holder.Children.Clear();
+            messages_statuses.AddRange(statuses);
         }
 
         public void SetPhotosListSatusData(String data)
         {
             photoslist_satus_data.Content = data;
         }
+
+        public string GetUserID()
+        {
+            return photos_user_info.ID;
+        }
+
+        public ulong GetPhotosCount()
+        {
+            return (ulong)photos_list_items.Count;
+        }
+
+        public void DisableNextPhotosButton()
+        {
+            next_photos_button.IsEnabled = false;
+        }
         #endregion
 
         #region EventMethods
-        private void ButtonWithUserInfo_RefreshPhotos_Click(object sender, RoutedEventArgs e)
+        private void Button_RefreshPhotos_Click(object sender, RoutedEventArgs e)
         {
-            ButtonWithUserInfo buttonWithUserInfo = sender as ButtonWithUserInfo;
+            if (photos_user_info == null) return;
 
-            if (buttonWithUserInfo.User == null) return;
+            next_photos_button.IsEnabled = true;
 
-            photosListItems.Clear();
-            findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).RefreshPhotos(buttonWithUserInfo.User.ID);
+            photos_list_items.Clear();
+            photos_holder.Children.Clear();
 
-            for (int i = 0; i < photosListItems.Count; i++)
+            findSocialNetworkExtensionByName(photos_user_info.SocialNetworkName).GetPhotos();
+
+            old_photos_list_items_count = photos_list_items.Count;
+
+            for (int i = 0; i < photos_list_items.Count; i++)
             {
                 Image photo = new Image();
-                photo.Source = photosListItems[i].Photo;
+                photo.Source = photos_list_items[i].Photo;
+                photo.Style = FindResource("PhotoStyle") as Style;
+
+                photos_holder.Children.Add(photo);
+            }
+        }
+
+        private void Button_Next_Click(object sender, RoutedEventArgs e)
+        {
+            if (photos_user_info == null) return;
+
+            findSocialNetworkExtensionByName(photos_user_info.SocialNetworkName).GetPhotos();
+
+            for (int i = old_photos_list_items_count; i < photos_list_items.Count; i++)
+            {
+                Image photo = new Image();
+                photo.Source = photos_list_items[i].Photo;
                 photo.Style = FindResource("PhotoStyle") as Style;
 
                 photos_holder.Children.Add(photo);
@@ -315,31 +350,27 @@ namespace SocialNetworksManager
 
             if (buttonWithUserInfo.User == null) return;
 
-            refresh_photos_button.User = new UserInfo()
-            {
-                ID = buttonWithUserInfo.User.ID,
-                Name = buttonWithUserInfo.User.Name,
-                SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName
-            };
+            next_photos_button.IsEnabled = true;
 
-            next_photos_button.User = new UserInfo()
-            {
-                ID = buttonWithUserInfo.User.ID,
-                Name = buttonWithUserInfo.User.Name,
-                SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName
-            };
-
-            photosListItems.Clear();
-
+            photos_user_info = new UserInfo();
+            photos_user_info.ID = buttonWithUserInfo.User.ID;
+            photos_user_info.Name = buttonWithUserInfo.User.Name;
+            photos_user_info.SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName;
             username_textbox.Text = buttonWithUserInfo.User.Name;
-            findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).GetPhotos(buttonWithUserInfo.User.ID);
-            
-            for (int i = 0; i < photosListItems.Count; i++)
+            photo_size_slider.Value = photo_size_slider.Minimum;
+            old_photos_list_items_count = photos_list_items.Count;
+
+            photos_list_items.Clear();
+            photos_holder.Children.Clear();
+
+            findSocialNetworkExtensionByName(buttonWithUserInfo.User.SocialNetworkName).GetPhotos();
+
+            for (int i = 0; i < photos_list_items.Count; i++)
             {
                 Image photo = new Image();
-                photo.Source = photosListItems[i].Photo;
+                photo.Source = photos_list_items[i].Photo;
                 photo.Style = FindResource("PhotoStyle") as Style;
-                
+
                 photos_holder.Children.Add(photo);
             }
         }
@@ -351,22 +382,23 @@ namespace SocialNetworksManager
 
         private void Button_SendMessage_Click(object sender, RoutedEventArgs e)
         {
-            messagesStatuses.Clear();
+            messages_statuses.Clear();
 
-            foreach (Lazy<ISocialNetworksManagerExtension> item in importManager.extensionsCollection)
+            foreach (Lazy<ISocialNetworksManagerExtension> item in import_manager.extensionsCollection)
             {
                 item.Value.SendMessageToSelectedFriends();
             }
 
+            if (messages_statuses.Count == 0) return;
+
             StringBuilder messagesStatusesString = new StringBuilder();
 
-            foreach (SendMessageStatus status in messagesStatuses)
+            foreach (SendMessageStatus status in messages_statuses)
             {
-                messagesStatusesString.AppendFormat("{0}: Message from {1} to {2} {3}.\n",status.SocialNetworkName,status.UserNameFrom,status.UserNameTo,status.IsMessageSended == true ? "Sended" : "Not Sended");
+                messagesStatusesString.AppendFormat("{0}: Message from {1} to {2} {3}.\n", status.SocialNetworkName, status.UserNameFrom, status.UserNameTo, status.IsMessageSended == true ? "Sended" : "Not Sended");
             }
 
-            SpecialWindow specialWindow = new SpecialWindow(messagesStatusesString.ToString());
-            specialWindow.ShowDialog();
+            OpenSpecialWindow(messagesStatusesString.ToString());
         }
 
         private void Button_Auth_Click(object sender, RoutedEventArgs e)
@@ -381,7 +413,7 @@ namespace SocialNetworksManager
 
         private void Button_SelectAllFriends_Click(object sender, RoutedEventArgs e)
         {
-            foreach (FriendsListItem item in friendsListItems)
+            foreach (FriendsListItem item in friends_list_items)
             {
                 item.IsChecked = true;
             }
@@ -389,7 +421,7 @@ namespace SocialNetworksManager
 
         private void Button_DeselectAllFriends_Click(object sender, RoutedEventArgs e)
         {
-            foreach (FriendsListItem item in friendsListItems)
+            foreach (FriendsListItem item in friends_list_items)
             {
                 item.IsChecked = false;
             }
@@ -413,6 +445,21 @@ namespace SocialNetworksManager
                     default:
                         break;
                 }
+            }
+        }
+
+        private void Slider_PhotoSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UIElementCollection element_collection = photos_holder?.Children;
+
+            if (element_collection == null) return;
+
+            foreach (UIElement item in element_collection)
+            {
+                Image img = item as Image;
+
+                img.Width = e.NewValue;
+                img.Height = e.NewValue;
             }
         }
         #endregion

@@ -75,21 +75,24 @@
 
             <Controls:MetroTabItem Header="Friends">
                 <DockPanel>
-                    
+
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                        <Button Content="Select All" Click="Button_SelectAllFriends_Click"></Button>
-                        <Button Content="Deselect All" Click="Button_DeselectAllFriends_Click"></Button>
+                        <Border Padding="5" Margin="5" BorderBrush="LightGray" BorderThickness="1" CornerRadius="3">
+                            <StackPanel Orientation="Horizontal">
+                                <Button ToolTip="Select All" Content="{Material:PackIcon Kind=SelectAll}" Click="Button_SelectAllFriends_Click" Margin="0,0,5,0"></Button>
+                                <Button ToolTip="Deselect All" Content="{Material:PackIcon Kind=SelectInverse}" Click="Button_DeselectAllFriends_Click"></Button>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                    <Grid DockPanel.Dock="Bottom">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="60"/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0">Message:</Label>
-                        <TextBox Grid.Column="1" x:Name="message_text_box"></TextBox>
-                        <Button Grid.Column="2" Content="Send Message" Click="Button_SendMessage_Click"></Button>
-                    </Grid>
+
+                    <Border DockPanel.Dock="Bottom" Padding="5" Margin="5" BorderBrush="LightGray" BorderThickness="1" CornerRadius="3">
+                        <DockPanel>
+                            <Label DockPanel.Dock="Left" Grid.Column="0" VerticalContentAlignment="Center">Message</Label>
+                            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                            <Button ToolTip="Send Message" DockPanel.Dock="Right" Grid.Column="2" Content="{Material:PackIcon Kind=Send}" Width="60" Click="Button_SendMessage_Click"></Button>
+                            <TextBox Grid.Column="1" x:Name="message_text_box" Margin="5,0" VerticalContentAlignment="Center"></TextBox>
+                        </DockPanel>
+                    </Border>
                     <ListView x:Name="friendsList">
                         <ListView.View>
                             <GridView AllowsColumnReorder="False">
@@ -114,13 +117,13 @@
 
                     <ScrollViewer DockPanel.Dock="Left" VerticalScrollBarVisibility="Visible" MinWidth="200">
                         <StackPanel>
-                            <StackPanel Grid.Row="0">
+                            <StackPanel>
                                 <Label Content="My Photos"></Label>
                                 <Separator/>
                                 <TreeView x:Name="myphotos_socialnetworks_buttons"></TreeView>
                             </StackPanel>
                             <Border Grid.Row="1" Margin="0,5"></Border>
-                            <StackPanel Grid.Row="2">
+                            <StackPanel>
                                 <Label Content="Friends Photos"></Label>
                                 <Separator/>
                                 <TreeView x:Name="friendsphotos_socialnetworks_buttons"></TreeView>
@@ -132,19 +135,25 @@
                         <StackPanel DockPanel.Dock="Top">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                                    <Label Style="{DynamicResource LabelStyle}" BorderBrush="LightGray" BorderThickness="1" VerticalContentAlignment="Center">
+                                    <Border CornerRadius="3" BorderBrush="LightGray" BorderThickness="1" MinWidth="150">
                                         <StackPanel Orientation="Horizontal">
-                                            <Label Content="User Name:"/>
-                                            <TextBlock x:Name="username_textbox" VerticalAlignment="Center"></TextBlock>
+                                            <Label Content="User Name" VerticalContentAlignment="Center"/>
+                                            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                                            <TextBlock x:Name="username_textbox" VerticalAlignment="Center" Margin="5,0"></TextBlock>
                                         </StackPanel>
-                                    </Label>
+                                    </Border>
                                 </StackPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <DP:ButtonWithUserInfo x:Name="next_photos_button" Content="Next" Click="ButtonWithUserInfo_Click"/>
-                                    <Label x:Name="photoslist_satus_data" Width="100" Content="0/0" Style="{DynamicResource LabelStyle}" BorderBrush="LightGray" BorderThickness="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="5,0"/>
-                                    <DP:ButtonWithUserInfo x:Name="refresh_photos_button" Width="50" Margin="0,0,5,0" Click="ButtonWithUserInfo_RefreshPhotos_Click">
-                                        <Material:PackIcon Kind="Refresh"/>
-                                    </DP:ButtonWithUserInfo>
+                                    <Border CornerRadius="3" BorderBrush="LightGray" BorderThickness="1" Margin="0,0,5,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Photo Size" VerticalContentAlignment="Center"/>
+                                            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                                            <Slider x:Name="photo_size_slider" TickPlacement="BottomRight" IsSnapToTickEnabled="True" TickFrequency="50" Width="100" Margin="5,5" Minimum="200" Maximum="1000" ValueChanged="Slider_PhotoSize_ValueChanged"></Slider>
+                                        </StackPanel>
+                                    </Border>
+                                    <Button x:Name="next_photos_button" ToolTip="Next Photos" Margin="0,0,5,0" Content="Next" Click="Button_Next_Click"/>
+                                    <Label x:Name="photoslist_satus_data" Width="100" Content="0/0" Style="{DynamicResource LabelStyle}" BorderBrush="LightGray" BorderThickness="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="0,0,5,0"/>
+                                    <Button ToolTip="Refresh Images" Content="{Material:PackIcon Kind=Refresh}" Width="50" Margin="0,0,5,0" Click="Button_RefreshPhotos_Click"/>
                                 </StackPanel>
                                 <Border/>
                             </DockPanel>

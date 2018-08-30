@@ -17,16 +17,9 @@ namespace SlackExtension
         //For many users
         private List<SlackHelper> users_helpers = null;
 
-        //Fro photos
-        private String current_photos_user_id = "";
-        private Int64 photos_show_count = 20;
-        private Int64 current_photos_offset = 0;
-        private List<Models.SlackFile> current_user_photos = null;
-
         public SlackExtension()
         {
             users_helpers = new List<SlackHelper>();
-            current_user_photos = new List<Models.SlackFile>();
         }
 
         public string getSocialNetworkName()
@@ -107,71 +100,36 @@ namespace SlackExtension
             }
         }
 
-        public void RefreshPhotos(string user_id)
+        public void GetPhotos()
         {
-            applicationContract.ClearItemsFromPhotosList();
-            current_photos_user_id = "";
-            current_photos_offset = 0;
-            GetPhotos(user_id);
-        }
+            SlackHelper slackHelper = null;
 
-        public void GetPhotos(string user_id)
-        {
-            if(current_photos_user_id != user_id)
+            for (int i = 0; i < users_helpers.Count; i++)
             {
-                SlackHelper slackHelper = null;
-
-                current_photos_user_id = user_id;
-                current_photos_offset = 0;
-
-                current_user_photos.Clear();
-                applicationContract.ClearItemsFromPhotosList();
-
-                for (int i = 0; i < users_helpers.Count; i++)
+                if (users_helpers[i].GetUserInfo(applicationContract.GetUserID()) != null)
                 {
-                    if (users_helpers[i].GetUserInfo(user_id) != null)
-                    {
-                        slackHelper = users_helpers[i];
-                        break;
-                    }
+                    slackHelper = users_helpers[i];
+                    break;
                 }
-
-                current_user_photos = slackHelper.GetPhotos(user_id);
-
-                current_photos_offset += photos_show_count;
-            }
-            else
-            {
-                current_photos_offset += photos_show_count;
             }
 
-            if (current_user_photos.Count == 0)
-            {
-                applicationContract.ClearItemsFromPhotosList();
-                applicationContract.SetPhotosListSatusData("0/0");
-                return;
-            }
+            List<Models.SlackFile> files = slackHelper.GetPhotos(applicationContract.GetUserID());
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
-            int from_pos = (int)current_photos_offset - (int)photos_show_count;
-            int to_pos = (int)current_photos_offset - 1;
-
-            if (from_pos > current_user_photos.Count - 1) return;
-            if (to_pos > current_user_photos.Count - 1) to_pos = current_user_photos.Count - 1;
-
-            for (int i = from_pos; i <= to_pos; i++)
+            foreach (Models.SlackFile file in files)
             {
-                String[] permalink_split = current_user_photos[i].PermalinkPublic.Split('-');
-                String photo_link = String.Format("{0}?pub_secret={1}", current_user_photos[i].URLPrivate, permalink_split[permalink_split.Length - 1]);
+                String[] permalink_split = file.PermalinkPublic.Split('-');
+                String photo_link = String.Format("{0}?pub_secret={1}", file.URLPrivate, permalink_split[permalink_split.Length - 1]);
 
                 PhotosListItem photoItem = new PhotosListItem(new Uri(photo_link));
 
                 photosItems.Add(photoItem);
             }
 
-            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}", to_pos + 1, current_user_photos.Count));
             applicationContract.AddItemsToPhotosList(photosItems);
+            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}",applicationContract.GetPhotosCount(),files.Count));
+            applicationContract.DisableNextPhotosButton();
         }
 
         public void SendMessageToSelectedFriends()
