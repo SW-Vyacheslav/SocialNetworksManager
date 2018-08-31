@@ -84,8 +84,24 @@
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Border Padding="5" Margin="5" BorderBrush="LightGray" BorderThickness="1" CornerRadius="3">
                             <StackPanel Orientation="Horizontal">
-                                <Button ToolTip="Select All" Content="{Material:PackIcon Kind=SelectAll}" Click="Button_SelectAllFriends_Click" Margin="0,0,5,0"></Button>
-                                <Button ToolTip="Deselect All" Content="{Material:PackIcon Kind=SelectInverse}" Click="Button_DeselectAllFriends_Click"></Button>
+                                <Button Width="35" ToolTip="Select All" Content="{Material:PackIcon Kind=SelectAll}" Click="Button_SelectAllFriends_Click" Margin="0,0,5,0"></Button>
+                                <Button Width="35" ToolTip="Deselect All" Content="{Material:PackIcon Kind=SelectInverse}" Click="Button_DeselectAllFriends_Click" Margin="0,0,5,0"></Button>
+                                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="0,0,5,0"/>
+                                <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="3" Margin="0,0,5,0" Padding="5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="Social Network" VerticalContentAlignment="Center"></Label>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                                        <ComboBox x:Name="social_network_combobox" Margin="5,0" MinWidth="100" SelectionChanged="social_network_combobox_SelectionChanged"></ComboBox>
+                                    </StackPanel>
+                                </Border>
+                                <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="3" Margin="0,0,5,0" Padding="5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="User Name" VerticalContentAlignment="Center"/>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                                        <ComboBox x:Name="user_name_combobox" Margin="5,0" MinWidth="100"></ComboBox>
+                                    </StackPanel>
+                                </Border>
+                                <Button Width="35" ToolTip="Select With Filter" Content="{Material:PackIcon Kind=Select}" Click="Button_SelectWithFilter_Click"></Button>
                             </StackPanel>
                         </Border>
                     </StackPanel>

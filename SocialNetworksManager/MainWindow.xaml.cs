@@ -172,6 +172,36 @@ namespace SocialNetworksManager
                 item.Value.GetFriends();
             }
 
+            social_network_combobox.Items.Clear();
+            user_name_combobox.Items.Clear();
+            social_network_combobox.Items.Add(new ComboBoxItem() { Content = "None" });
+            user_name_combobox.Items.Add(new ComboBoxItem() { Content = "None" });
+            social_network_combobox.SelectedItem = social_network_combobox.Items[0];
+            user_name_combobox.SelectedItem = user_name_combobox.Items[0];
+
+            Boolean has_this_item = false;
+
+            foreach (FriendsListItem friend_list_item in friends_list_items)
+            {
+                for (int i = 0; i < social_network_combobox.Items.Count; i++)
+                {
+                    ComboBoxItem combo_box_item = social_network_combobox.Items[i] as ComboBoxItem;
+
+                    if((String)combo_box_item.Content == friend_list_item.SocialNetworkName)
+                    {
+                        has_this_item = true;
+                        break;
+                    }
+                }
+
+                if(!has_this_item)
+                {
+                    social_network_combobox.Items.Add(new ComboBoxItem() { Content = friend_list_item.SocialNetworkName});
+                }
+
+                has_this_item = false;
+            }
+
             friendsList.ItemsSource = friends_list_items;
         }
 
@@ -482,6 +512,41 @@ namespace SocialNetworksManager
             }
         }
 
+        private void Button_SelectWithFilter_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (FriendsListItem item in friends_list_items)
+            {
+                ComboBoxItem soc_net = social_network_combobox.SelectedItem as ComboBoxItem;
+                ComboBoxItem user_name = user_name_combobox.SelectedItem as ComboBoxItem;
+
+                if ((String)soc_net.Content == "None" && (String)user_name.Content != "None")
+                {
+                    if ((String)user_name.Content == item.User.Name)
+                    {
+                        item.IsChecked = true;
+                    }
+                    else item.IsChecked = false;
+                }
+                else if ((String)soc_net.Content != "None" && (String)user_name.Content == "None")
+                {
+                    if ((String)soc_net.Content == item.SocialNetworkName)
+                    {
+                        item.IsChecked = true;
+                    }
+                    else item.IsChecked = false;
+                }
+                else if ((String)user_name.Content != "None" && (String)soc_net.Content != "None")
+                {
+                    if ((String)user_name.Content == item.User.Name && (String)soc_net.Content == item.SocialNetworkName)
+                    {
+                        item.IsChecked = true;
+                    }
+                    else item.IsChecked = false;
+                }
+                else item.IsChecked = false;
+            }
+        }
+
         private void pages_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.Source is MetroAnimatedTabControl)
@@ -521,5 +586,42 @@ namespace SocialNetworksManager
             }
         }
         #endregion
+
+        private void social_network_combobox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (social_network_combobox.SelectedItem == null) return;
+
+            Boolean has_this_item = false;
+
+            user_name_combobox.Items.Clear();
+            user_name_combobox.Items.Add(new ComboBoxItem() { Content = "None" });
+            user_name_combobox.SelectedItem = user_name_combobox.Items[0];
+
+            foreach (FriendsListItem friend_list_item in friends_list_items)
+            {
+                ComboBoxItem selected_soc_net = social_network_combobox.SelectedItem as ComboBoxItem;
+
+                if((String)selected_soc_net.Content == friend_list_item.SocialNetworkName)
+                {
+                    for (int i = 0; i < user_name_combobox.Items.Count; i++)
+                    {
+                        ComboBoxItem combo_box_item = user_name_combobox.Items[i] as ComboBoxItem;
+
+                        if ((String)combo_box_item.Content == friend_list_item.User.Name)
+                        {
+                            has_this_item = true;
+                            break;
+                        }
+                    }
+
+                    if (!has_this_item)
+                    {
+                        user_name_combobox.Items.Add(new ComboBoxItem() { Content = friend_list_item.User.Name });
+                    }
+
+                    has_this_item = false;
+                }
+            }
+        }
     }
 }
