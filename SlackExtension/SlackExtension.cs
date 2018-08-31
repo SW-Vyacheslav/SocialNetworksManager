@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 
 using SocialNetworksManager.Contracts;
 using SocialNetworksManager.DataPresentation;
@@ -79,7 +80,13 @@ namespace SlackExtension
             {
                 if (!item.IsAuthorized) continue;
 
-                List<Models.SlackUser> users = item.GetUsers();
+                Responses.SlackUsersListResponse slackUsersListResponse = item.Users_List();
+
+                if (!slackUsersListResponse.Ok) continue;
+
+                List<Models.SlackUser> users = slackUsersListResponse.Members?.ToList();
+
+                if (users == null) continue;
 
                 List<FriendsListItem> friendsItems = new List<FriendsListItem>();
 
@@ -106,19 +113,30 @@ namespace SlackExtension
 
             for (int i = 0; i < users_helpers.Count; i++)
             {
-                if (users_helpers[i].GetUserInfo(applicationContract.GetUserID()) != null)
+                if (users_helpers[i].Users_Info(applicationContract.GetPhotoUserID()) != null)
                 {
                     slackHelper = users_helpers[i];
                     break;
                 }
             }
 
-            List<Models.SlackFile> files = slackHelper.GetPhotos(applicationContract.GetUserID());
+            if (!slackHelper.IsAuthorized) return;
+
+            const UInt64 count = 20;
+            UInt64 page = applicationContract.GetPhotosCount() / count + 1;
+
+            Responses.SlackFilesListResponse slackFilesListResponse = slackHelper.Files_List(applicationContract.GetPhotoUserID(), Models.SlackFileTypes.Images, count, page);
+
+            if (!slackFilesListResponse.Ok) return;
+
+            List<Models.SlackFile> files = slackFilesListResponse.Files.ToList();
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
 
             foreach (Models.SlackFile file in files)
             {
+                if (!file.PublicURLShared) continue;
+
                 String[] permalink_split = file.PermalinkPublic.Split('-');
                 String photo_link = String.Format("{0}?pub_secret={1}", file.URLPrivate, permalink_split[permalink_split.Length - 1]);
 
@@ -128,8 +146,43 @@ namespace SlackExtension
             }
 
             applicationContract.AddItemsToPhotosList(photosItems);
-            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}",applicationContract.GetPhotosCount(),files.Count));
-            applicationContract.DisableNextPhotosButton();
+            applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}",applicationContract.GetPhotosCount(),slackFilesListResponse.Paging.Total));
+            if (applicationContract.GetPhotosCount() == slackFilesListResponse.Paging.Total) applicationContract.DisableNextPhotosButton();
+        }
+
+        public void GetGroups()
+        {
+            foreach (SlackHelper user_helper in users_helpers)
+            {
+                if (!user_helper.IsAuthorized) continue;
+
+                Responses.SlackChannelsListResponse slackChannelsListResponse = user_helper.Channels_List();
+
+                if (!slackChannelsListResponse.Ok) continue;
+
+                List<Models.SlackChannel> channels = slackChannelsListResponse.Channels?.ToList();
+
+                if (channels == null) continue;
+
+                List<GroupsListItem> groups_items = new List<GroupsListItem>();
+
+                foreach (Models.SlackChannel channel in channels)
+                {
+                    GroupsListItem group_item = new GroupsListItem();
+                    group_item.GroupName = channel.Name;
+                    group_item.SocialNetworkName = getSocialNetworkName();
+                    group_item.User = new UserInfo()
+                    {
+                        SocialNetworkName = getSocialNetworkName(),
+                        ID = user_helper.User.ID,
+                        Name = user_helper.User.RealName
+                    };
+
+                    groups_items.Add(group_item);
+                }
+
+                applicationContract.AddItemsToGroupsList(groups_items);
+            }
         }
 
         public void SendMessageToSelectedFriends()
@@ -138,8 +191,15 @@ namespace SlackExtension
             {
                 if (!user_helper.IsAuthorized) continue;
 
+                Responses.SlackIMListResponse slackIMListResponse = user_helper.Im_List();
+
+                if (!slackIMListResponse.Ok) continue;
+
+                List<Models.SlackIM> ims = slackIMListResponse.IMs?.ToList();
+
+                if (ims == null) continue;
+
                 List<FriendsListItem> friends_items = applicationContract.GetFriendsListItems();
-                List<Models.SlackIM> ims = user_helper.GetIms();
                 List<SendMessageStatus> statuses = new List<SendMessageStatus>();
 
                 foreach (FriendsListItem friend_item in friends_items)
@@ -155,14 +215,17 @@ namespace SlackExtension
                         if (friend_item.Friend.ID == im.User)
                         {
                             channel_id = im.ID;
+                            break;
                         }
                     }
+
+                    if (channel_id == null) continue;
 
                     SendMessageStatus status = new SendMessageStatus();
                     status.SocialNetworkName = getSocialNetworkName();
                     status.UserNameTo = friend_item.Friend.Name;
                     status.UserNameFrom = friend_item.User.Name;
-                    status.IsMessageSended = user_helper.SendMessage(channel_id, applicationContract.GetMessage());
+                    status.IsMessageSended = user_helper.Chat_MeMessage(channel_id, applicationContract.GetMessage()).Ok;
                     statuses.Add(status);
                 }
 

@@ -29,11 +29,11 @@ namespace SocialNetworksManager
         private List<SocialNetworksListItem> social_networks_list_items = new List<SocialNetworksListItem>();
         private List<FriendsListItem> friends_list_items = new List<FriendsListItem>();
         private List<PhotosListItem> photos_list_items = new List<PhotosListItem>();
+        private List<GroupsListItem> groups_list_items = new List<GroupsListItem>();
         private List<SendMessageStatus> messages_statuses = new List<SendMessageStatus>();
 
         //Other fields
         private UserInfo photos_user_info = null;
-        private Int32 old_photos_list_items_count = 0;
         private Thread check_connection_thread;
         private SpecialWindow special_window;
         private Boolean IsContainerInitialized = false;
@@ -225,6 +225,48 @@ namespace SocialNetworksManager
                 friendsphotos_socialnetworks_buttons.Items.Add(treeViewItem);
             }
         }
+
+        private void UpdateGroups()
+        {
+            groups_holder.Items.Clear();
+
+            foreach (Lazy<ISocialNetworksManagerExtension> item in import_manager.extensionsCollection)
+            {
+                groups_list_items.Clear();
+                item.Value.GetGroups();
+
+                String soc_net_name = item.Value.getSocialNetworkName();
+                String user_name = "";
+
+                TreeViewItem soc_net_treeviewitem = new TreeViewItem();
+                soc_net_treeviewitem.Header = soc_net_name;
+
+                foreach (GroupsListItem user_item in groups_list_items)
+                {
+                    if(user_name != user_item.User.Name)
+                    {
+                        TreeViewItem user_treeviewitem = new TreeViewItem();
+                        user_treeviewitem.Header = user_item.User.Name;
+                        user_name = user_item.User.Name;
+
+                        foreach (GroupsListItem group_item in groups_list_items)
+                        {
+                            if (group_item.User.ID == user_item.User.ID)
+                            {
+                                TreeViewItem group_treeviewitem = new TreeViewItem();
+                                group_treeviewitem.Header = group_item.GroupName;
+
+                                user_treeviewitem.Items.Add(group_treeviewitem);
+                            }
+                        }
+
+                        soc_net_treeviewitem.Items.Add(user_treeviewitem);
+                    }
+                }
+
+                groups_holder.Items.Add(soc_net_treeviewitem);
+            }
+        }
         #endregion
 
         #region ContractMethods
@@ -236,6 +278,11 @@ namespace SocialNetworksManager
         public void AddItemsToPhotosList(List<PhotosListItem> items)
         {
             photos_list_items.AddRange(items);
+        }
+
+        public void AddItemsToGroupsList(List<GroupsListItem> items)
+        {
+            groups_list_items.AddRange(items);
         }
 
         public void OpenSpecialWindow(Uri uri, Uri redirect_uri, Dictionary<String, String> parameters)
@@ -288,7 +335,7 @@ namespace SocialNetworksManager
             photoslist_satus_data.Content = data;
         }
 
-        public string GetUserID()
+        public string GetPhotoUserID()
         {
             return photos_user_info.ID;
         }
@@ -316,15 +363,16 @@ namespace SocialNetworksManager
 
             findSocialNetworkExtensionByName(photos_user_info.SocialNetworkName).GetPhotos();
 
-            old_photos_list_items_count = photos_list_items.Count;
-
             for (int i = 0; i < photos_list_items.Count; i++)
             {
-                Image photo = new Image();
-                photo.Source = photos_list_items[i].Photo;
+                Image photo = photos_list_items[i].Photo;
                 photo.Style = FindResource("PhotoStyle") as Style;
 
-                photos_holder.Children.Add(photo);
+                Border photoBorder = new Border();
+                photoBorder.Style = FindResource("PhotoBorderStyle") as Style;
+                photoBorder.Child = photo;
+
+                photos_holder.Children.Add(photoBorder);
             }
         }
 
@@ -332,15 +380,20 @@ namespace SocialNetworksManager
         {
             if (photos_user_info == null) return;
 
+            int from_pos = photos_list_items.Count;
+
             findSocialNetworkExtensionByName(photos_user_info.SocialNetworkName).GetPhotos();
 
-            for (int i = old_photos_list_items_count; i < photos_list_items.Count; i++)
+            for (int i = from_pos; i < photos_list_items.Count; i++)
             {
-                Image photo = new Image();
-                photo.Source = photos_list_items[i].Photo;
+                Image photo = photos_list_items[i].Photo;
                 photo.Style = FindResource("PhotoStyle") as Style;
 
-                photos_holder.Children.Add(photo);
+                Border photoBorder = new Border();
+                photoBorder.Style = FindResource("PhotoBorderStyle") as Style;
+                photoBorder.Child = photo;
+
+                photos_holder.Children.Add(photoBorder);
             }
         }
 
@@ -358,7 +411,6 @@ namespace SocialNetworksManager
             photos_user_info.SocialNetworkName = buttonWithUserInfo.User.SocialNetworkName;
             username_textbox.Text = buttonWithUserInfo.User.Name;
             photo_size_slider.Value = photo_size_slider.Minimum;
-            old_photos_list_items_count = photos_list_items.Count;
 
             photos_list_items.Clear();
             photos_holder.Children.Clear();
@@ -367,11 +419,14 @@ namespace SocialNetworksManager
 
             for (int i = 0; i < photos_list_items.Count; i++)
             {
-                Image photo = new Image();
-                photo.Source = photos_list_items[i].Photo;
+                Image photo = photos_list_items[i].Photo;
                 photo.Style = FindResource("PhotoStyle") as Style;
 
-                photos_holder.Children.Add(photo);
+                Border photoBorder = new Border();
+                photoBorder.Style = FindResource("PhotoBorderStyle") as Style;
+                photoBorder.Child = photo;
+
+                photos_holder.Children.Add(photoBorder);
             }
         }
 
@@ -442,6 +497,9 @@ namespace SocialNetworksManager
                     case "Photos":
                         UpdatePhotos();
                         break;
+                    case "Groups":
+                        UpdateGroups();
+                        break;
                     default:
                         break;
                 }
@@ -456,7 +514,7 @@ namespace SocialNetworksManager
 
             foreach (UIElement item in element_collection)
             {
-                Image img = item as Image;
+                Image img = (item as Border).Child as Image;
 
                 img.Width = e.NewValue;
                 img.Height = e.NewValue;

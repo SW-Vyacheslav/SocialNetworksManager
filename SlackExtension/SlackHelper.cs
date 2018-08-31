@@ -32,7 +32,7 @@ namespace SlackExtension
 
             Dictionary<String, String> auth_parameters = new Dictionary<string, string>();
             auth_parameters["client_id"] = Properties.Resources.client_id;
-            auth_parameters["scope"] = "files:read,chat:write:user,im:read,users:read";
+            auth_parameters["scope"] = "files:read,chat:write:user,im:read,users:read,channels:read";
             auth_parameters["redirect_uri"] = Properties.Resources.redirect_uri;
             auth_parameters["state"] = state;
 
@@ -61,92 +61,112 @@ namespace SlackExtension
             {
                 IsAuthorized = true;
                 _access_token = getTokenResponse.AccessToken;
-                User.ID = getTokenResponse.UserID;
-                User.RealName = GetUserInfo(getTokenResponse.UserID).RealName;
-                User.TeamID = getTokenResponse.TeamID;
+                User = Users_Info(getTokenResponse.UserID).User;
             }
         }
 
-        public List<Models.SlackUser> GetUsers()
+        public Responses.SlackUsersListResponse Users_List()
         {
-            if (!IsAuthorized) return null;
+            if (!IsAuthorized) throw new Exceptions.SlackAuthException("Not Authorized."); ;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
 
-            Uri get_users_uri = GetApiUri("users.list", parameters);
+            Uri users_list_uri = GetApiUri("users.list", parameters);
 
-            Responses.SlackUsersListResponse userListResponse = JsonConvert.DeserializeObject<Responses.SlackUsersListResponse>(NetHelper.GetRequest(get_users_uri));
+            Responses.SlackUsersListResponse userListResponse = JsonConvert.DeserializeObject<Responses.SlackUsersListResponse>(NetHelper.GetRequest(users_list_uri));
 
-            if (!userListResponse.Ok) return null;
-
-            return userListResponse.Members.ToList();
+            return userListResponse;
         }
 
-        public List<Models.SlackFile> GetPhotos(String user_id)
+        public Responses.SlackFilesListResponse Files_List
+        (
+            String user_id = null,
+            Models.SlackFileType file_types = null,
+            UInt64 count = 100,
+            UInt64 page = 1,
+            String channel_id = null,
+            String ts_from = null,
+            String ts_to = null
+        )
         {
             if (!IsAuthorized) return null;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
-            parameters["types"] = "images";
+            parameters["types"] = file_types.ToString();
             parameters["user"] = user_id;
+            parameters["channel"] = channel_id;
+            parameters["count"] = Convert.ToString(count);
+            parameters["page"] = Convert.ToString(page);
+            parameters["ts_from"] = ts_from;
+            parameters["ts_to"] = ts_to;
 
-            Uri get_files_uri = GetApiUri("files.list", parameters);
+            Uri files_list_uri = GetApiUri("files.list", parameters);
 
-            Responses.SlackFilesListResponse fileListResponse = JsonConvert.DeserializeObject<Responses.SlackFilesListResponse>(NetHelper.GetRequest(get_files_uri));
+            Responses.SlackFilesListResponse fileListResponse = JsonConvert.DeserializeObject<Responses.SlackFilesListResponse>(NetHelper.GetRequest(files_list_uri));
 
-            if (!fileListResponse.Ok) return null;
-
-            return fileListResponse.Files.ToList();
+            return fileListResponse;
         }
 
-        public Boolean SendMessage(String channel_id,String message)
+        public Responses.SlackChatMeMessageResponse Chat_MeMessage(String channel_id,String message)
         {
-            if (!IsAuthorized) return false;
+            if (!IsAuthorized) throw new Exceptions.SlackAuthException("Not Authorized.");
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
             parameters["channel"] = channel_id;
             parameters["text"] = message;
 
-            Uri send_message_uri = GetApiUri("chat.meMessage", parameters);
+            Uri chat_memessage_uri = GetApiUri("chat.meMessage", parameters);
 
-            Responses.SlackMeMessageResponse meMessageResponse = JsonConvert.DeserializeObject<Responses.SlackMeMessageResponse>(NetHelper.GetRequest(send_message_uri));
+            Responses.SlackChatMeMessageResponse meMessageResponse = JsonConvert.DeserializeObject<Responses.SlackChatMeMessageResponse>(NetHelper.GetRequest(chat_memessage_uri));
 
-            if (!meMessageResponse.Ok) return false;
-            else return true;
+            return meMessageResponse;
         }
 
-        public List<Models.SlackIM> GetIms()
+        public Responses.SlackIMListResponse Im_List()
         {
-            if (!IsAuthorized) return null;
+            if (!IsAuthorized) throw new Exceptions.SlackAuthException("Not Authorized."); 
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
 
-            Uri get_channels_uri = GetApiUri("im.list", parameters);
+            Uri im_list_uri = GetApiUri("im.list", parameters);
 
-            Responses.SlackIMListResponse imlistResponse = JsonConvert.DeserializeObject<Responses.SlackIMListResponse>(NetHelper.GetRequest(get_channels_uri));
-            
-            if (!imlistResponse.Ok) return null;
-            else return imlistResponse.IMs.ToList();
+            Responses.SlackIMListResponse imlistResponse = JsonConvert.DeserializeObject<Responses.SlackIMListResponse>(NetHelper.GetRequest(im_list_uri));
+
+            return imlistResponse;
         }
 
-        public Models.SlackUser GetUserInfo(String user_id)
+        public Responses.SlackUsersInfoResponse Users_Info(String user_id, Boolean include_locale = false)
         {
-            if (!IsAuthorized) return null;
+            if (!IsAuthorized) throw new Exceptions.SlackAuthException("Not Authorized."); ;
 
             Dictionary<String, String> parameters = new Dictionary<string, string>();
             parameters["token"] = _access_token;
             parameters["user"] = user_id;
+            parameters["include_locale"] = include_locale == false ? "false" : "true";
 
             Uri users_info_url = GetApiUri("users.info",parameters);
 
             Responses.SlackUsersInfoResponse usersInfoResponse = JsonConvert.DeserializeObject<Responses.SlackUsersInfoResponse>(NetHelper.GetRequest(users_info_url));
 
-            if (!usersInfoResponse.Ok) return null;
-            else return usersInfoResponse.User;
+            return usersInfoResponse;
+        }
+
+        public Responses.SlackChannelsListResponse Channels_List()
+        {
+            if (!IsAuthorized) throw new Exceptions.SlackAuthException("Not Authorized.");
+
+            Dictionary<String, String> parameters = new Dictionary<string, string>();
+            parameters["token"] = _access_token;
+
+            Uri channels_list_uri = GetApiUri("channels.list",parameters);
+
+            Responses.SlackChannelsListResponse slackChannelsListResponse = JsonConvert.DeserializeObject<Responses.SlackChannelsListResponse>(NetHelper.GetRequest(channels_list_uri));
+
+            return slackChannelsListResponse;
         }
 
         public static Uri GetApiUri(String method, Dictionary<String,String> parameters)
@@ -156,8 +176,11 @@ namespace SlackExtension
 
             for (int i = 0; i < parameters.Count; i++)
             {
-                if (i != 0) uri.Append('&');
-                uri.AppendFormat("{0}={1}",parameters.ElementAt(i).Key,parameters.ElementAt(i).Value);
+                if (parameters.ElementAt(i).Value != null)
+                {
+                    if (i != 0) uri.Append('&');
+                    uri.AppendFormat("{0}={1}", parameters.ElementAt(i).Key, parameters.ElementAt(i).Value);
+                }  
             }
 
             return new Uri(uri.ToString());

@@ -75,19 +75,25 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\SlackAuthException.cs" />
+    <Compile Include="Models\SlackChannel.cs" />
     <Compile Include="Models\SlackFile.cs" />
     <Compile Include="Models\SlackFileTypes.cs" />
     <Compile Include="Models\SlackIM.cs" />
+    <Compile Include="Models\SlackPaging.cs" />
+    <Compile Include="Models\SlackPurposeInformation.cs" />
+    <Compile Include="Models\SlackTopicInformation.cs" />
     <Compile Include="Models\SlackUser.cs" />
-    <Compile Include="Models\UserProfile.cs" />
+    <Compile Include="Models\SlackUserProfile.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Responses\SlackChannelsListResponse.cs" />
     <Compile Include="Responses\SlackFilesListResponse.cs" />
     <Compile Include="Responses\SlackIMListResponse.cs" />
-    <Compile Include="Responses\SlackMeMessageResponse.cs" />
+    <Compile Include="Responses\SlackChatMeMessageResponse.cs" />
     <Compile Include="Responses\SlackUsersInfoResponse.cs" />
     <Compile Include="Responses\SlackUsersListResponse.cs" />
     <Compile Include="SlackExtension.cs" />

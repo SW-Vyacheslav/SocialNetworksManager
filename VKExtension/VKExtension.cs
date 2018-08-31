@@ -154,12 +154,14 @@ namespace VkExtension
         {
             VkCollection<Photo> photos = null;
 
-            long owner_id = Convert.ToInt64(applicationContract.GetUserID());
+            long owner_id = Convert.ToInt64(applicationContract.GetPhotoUserID());
 
             PhotoGetAllParams photoGetAllParams = new PhotoGetAllParams();
             photoGetAllParams.OwnerId = owner_id;
             photoGetAllParams.PhotoSizes = true;
             photoGetAllParams.Offset = applicationContract.GetPhotosCount();
+
+            VkApi user_api = null;
 
             for (int i = 0; i < users_api.Count; i++)
             {
@@ -169,17 +171,20 @@ namespace VkExtension
                     (users_api[i].Friends.AreFriends(new List<long>() { owner_id })[0].FriendStatus == VkNet.Enums.FriendStatus.Friend) 
                 )
                 {
-                    try
-                    {
-                        photos = users_api[i].Photo.GetAll(photoGetAllParams);
-                    }
-                    catch (VkApiException ex)
-                    {
-                        applicationContract.OpenSpecialWindow(ex.Message);
-                    }
-
+                    user_api = users_api[i];
                     break;
                 }
+            }
+
+            if (user_api == null) return;
+
+            try
+            {
+                photos = user_api.Photo.GetAll(photoGetAllParams);
+            }
+            catch (VkApiException)
+            {
+                return;
             }
 
             List<PhotosListItem> photosItems = new List<PhotosListItem>();
@@ -195,6 +200,49 @@ namespace VkExtension
             applicationContract.SetPhotosListSatusData(String.Format("{0}/{1}", applicationContract.GetPhotosCount(),photos.TotalCount));
 
             if (applicationContract.GetPhotosCount() == photos.TotalCount) applicationContract.DisableNextPhotosButton();
+        }
+
+        public void GetGroups()
+        {
+            for (int i = 0; i < users_count; i++)
+            {
+                if (!users_api[i].IsAuthorized) continue;
+
+                GroupsGetParams groupsGetParams = new GroupsGetParams();
+                groupsGetParams.Extended = true;
+
+                List<Group> groups = null;
+
+                try
+                {
+                    groups = users_api[i].Groups.Get(groupsGetParams)?.ToList();
+                }
+                catch (VkApiException)
+                {
+                    continue;
+                }
+
+                if (groups == null) continue;
+
+                List<GroupsListItem> groups_items = new List<GroupsListItem>();
+
+                foreach (Group group in groups)
+                {
+                    GroupsListItem group_item = new GroupsListItem();
+                    group_item.GroupName = group.Name;
+                    group_item.SocialNetworkName = getSocialNetworkName();
+                    group_item.User = new UserInfo()
+                    {
+                        SocialNetworkName = getSocialNetworkName(),
+                        ID = Convert.ToString(users_api[i].UserId),
+                        Name = getUserAccountName(i)
+                    };
+
+                    groups_items.Add(group_item);
+                }
+
+                applicationContract.AddItemsToGroupsList(groups_items);
+            }
         }
 
         public void SendMessageToSelectedFriends()

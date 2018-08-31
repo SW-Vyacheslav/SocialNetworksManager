@@ -40,7 +40,7 @@ namespace SlackExtension.Models
         public Boolean Editable { get; set; }
 
         [JsonProperty("size")]
-        public Int64 Size { get; set; }
+        public UInt64 Size { get; set; }
 
         [JsonProperty("mode")]
         public String Mode { get; set; }
@@ -79,19 +79,19 @@ namespace SlackExtension.Models
         public String Thumb360 { get; set; }
 
         [JsonProperty("thumb_360_w")]
-        public Int64 Thumb360Width { get; set; }
+        public UInt64 Thumb360Width { get; set; }
 
         [JsonProperty("thumb_360_h")]
-        public Int64 Thumb360Height { get; set; }
+        public UInt64 Thumb360Height { get; set; }
 
         [JsonProperty("thumb_480")]
         public String Thumb480 { get; set; }
 
         [JsonProperty("thumb_480_w")]
-        public Int64 Thumb480Width { get; set; }
+        public UInt64 Thumb480Width { get; set; }
 
         [JsonProperty("thumb_480_h")]
-        public Int64 Thumb480Height { get; set; }
+        public UInt64 Thumb480Height { get; set; }
 
         [JsonProperty("thumb_160")]
         public String Thumb160 { get; set; }
@@ -100,19 +100,19 @@ namespace SlackExtension.Models
         public String Thumb720 { get; set; }
 
         [JsonProperty("thumb_720_w")]
-        public Int64 Thumb720Width { get; set; }
+        public UInt64 Thumb720Width { get; set; }
 
         [JsonProperty("thumb_720_h")]
-        public Int64 Thumb720Height { get; set; }
+        public UInt64 Thumb720Height { get; set; }
 
         [JsonProperty("image_exif_rotation")]
         public Int64 ImageExifRoation { get; set; }
 
         [JsonProperty("original_w")]
-        public Int64 OriginalWidth { get; set; }
+        public UInt64 OriginalWidth { get; set; }
 
         [JsonProperty("original_h")]
-        public Int64 OriginalHeight { get; set; }
+        public UInt64 OriginalHeight { get; set; }
 
         [JsonProperty("permalink")]
         public String Permalink { get; set; }
@@ -130,6 +130,6 @@ namespace SlackExtension.Models
         public String[] IMs { get; set; }
 
         [JsonProperty("comments_count")]
-        public Int64 CommentsCount { get; set; }
+        public UInt64 CommentsCount { get; set; }
     }
 }

@@ -15,7 +15,6 @@
         <Style x:Key="PhotoStyle" TargetType="Image">
             <Setter Property="Width" Value="200"/>
             <Setter Property="Height" Value="200"/>
-            <Setter Property="Margin" Value="5"/>
         </Style>
         <Style TargetType="DP:ButtonWithUserInfo" BasedOn="{StaticResource MahApps.Metro.Styles.MetroButton}"></Style>
         <Style  x:Key="LabelStyle" TargetType="Label">
@@ -38,6 +37,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        <Style x:Key="PhotoBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Background" Value="LightGray"/>
         </Style>
     </Controls:MetroWindow.Resources>
 
@@ -64,7 +69,7 @@
                             <GridViewColumn>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Authorize" Click="Button_Auth_Click" Width="100" IsEnabled="{Binding Path=IsButtonEnabled}"></Button>
+                                        <Button Content="Authorize" Click="Button_Auth_Click" Width="100" IsEnabled="{Binding Path=IsButtonEnabled}" Margin="0,1"></Button>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -122,8 +127,7 @@
                                 <Separator/>
                                 <TreeView x:Name="myphotos_socialnetworks_buttons"></TreeView>
                             </StackPanel>
-                            <Border Grid.Row="1" Margin="0,5"></Border>
-                            <StackPanel>
+                            <StackPanel Margin="0,5,0,0">
                                 <Label Content="Friends Photos"></Label>
                                 <Separator/>
                                 <TreeView x:Name="friendsphotos_socialnetworks_buttons"></TreeView>
@@ -135,7 +139,7 @@
                         <StackPanel DockPanel.Dock="Top">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                                    <Border CornerRadius="3" BorderBrush="LightGray" BorderThickness="1" MinWidth="150">
+                                    <Border CornerRadius="3" BorderBrush="LightGray" BorderThickness="1" MinWidth="150" Margin="0,0,5,0">
                                         <StackPanel Orientation="Horizontal">
                                             <Label Content="User Name" VerticalContentAlignment="Center"/>
                                             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
@@ -166,6 +170,10 @@
                     </DockPanel>
 
                 </DockPanel>
+            </Controls:MetroTabItem>
+
+            <Controls:MetroTabItem Header="Groups">
+                <TreeView x:Name="groups_holder"></TreeView>                
             </Controls:MetroTabItem>
 
         </Controls:MetroAnimatedTabControl>

@@ -35,7 +35,7 @@ namespace SlackExtension.Models
         public Int64 TimeZoneOffset { get; set; }
 
         [JsonProperty("profile")]
-        public UserProfile Profile { get; set; }
+        public SlackUserProfile Profile { get; set; }
 
         [JsonProperty("is_admin")]
         public Boolean IsAdmin { get; set; }

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace SlackExtension.Responses
 {
-    public class SlackMeMessageResponse
+    public class SlackChatMeMessageResponse
     {
         [JsonProperty("ok")]
         public Boolean Ok { get; set; }

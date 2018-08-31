@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="ButtonWithUserInfo.cs" />
     <Compile Include="FriendsListItem.cs" />
+    <Compile Include="GroupsListItem.cs" />
     <Compile Include="PhotosListItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SendMessageStatus.cs" />

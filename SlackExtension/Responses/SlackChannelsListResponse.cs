@@ -4,16 +4,13 @@ using Newtonsoft.Json;
 
 namespace SlackExtension.Responses
 {
-    public class SlackFilesListResponse
+    public class SlackChannelsListResponse
     {
         [JsonProperty("ok")]
         public Boolean Ok { get; set; }
 
-        [JsonProperty("files")]
-        public Models.SlackFile[] Files { get; set; }
-
-        [JsonProperty("paging")]
-        public Models.SlackPaging Paging { get; set; }
+        [JsonProperty("channels")]
+        public Models.SlackChannel[] Channels { get; set; }
 
         [JsonProperty("error")]
         public String Error { get; set; }
