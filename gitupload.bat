@@ -1,3 +1,3 @@
 git add -A
-git commit -m "new friends selection"
+git commit -m "slack extesion bug fix"
 git push

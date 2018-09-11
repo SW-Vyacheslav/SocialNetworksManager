@@ -11,8 +11,8 @@ using System.Diagnostics;
 
 using Helpers;
 
-using DotNetBrowser;
-using DotNetBrowser.WPF;
+using CefSharp.Wpf;
+using CefSharp;
 
 using MahApps.Metro.Controls;
 
@@ -20,7 +20,7 @@ namespace SocialNetworksManager
 {
     public partial class SpecialWindow : MetroWindow
     {
-        private BrowserView webBrowser;
+        private ChromiumWebBrowser webBrowser;
         private Regex checkRegex;
         private Dictionary<String, String> parameters;
 
@@ -33,10 +33,38 @@ namespace SocialNetworksManager
             checkRegex = new Regex("^" + redirect_uri.ToString());
             this.parameters = parameters;
 
-            webBrowser = new WPFBrowserView();
-            webBrowser.Browser.DocumentLoadedInFrameEvent += Browser_DocumentLoadedInFrameEvent;
-            controlHolder.Children.Add((UIElement)webBrowser.GetComponent());
-            webBrowser.Browser.LoadURL(uri.ToString());
+            webBrowser = new ChromiumWebBrowser();
+            webBrowser.FrameLoadEnd += WebBrowser_FrameLoadEnd;
+            controlHolder.Children.Add(webBrowser);
+            webBrowser.Address = uri.ToString();
+        }
+
+        private void WebBrowser_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
+        {
+            if (checkRegex.Matches(e.Url).Count != 0)
+            {
+                Dictionary<String, String> uriParams = NetHelper.GetUriFields(new Uri(e.Url));
+
+                if (uriParams.ContainsKey("error"))
+                {
+                    parameters["error"] = "true";
+                    CloseWindow();
+                    return;
+                }
+
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    for (int j = 0; j < uriParams.Count; j++)
+                    {
+                        if (parameters.ContainsKey(uriParams.ElementAt(j).Key))
+                        {
+                            parameters[uriParams.ElementAt(j).Key] = uriParams.ElementAt(j).Value;
+                        }
+                    }
+                }
+
+                CloseWindow();
+            }
         }
 
         public SpecialWindow(UserControl userControl)
@@ -59,34 +87,6 @@ namespace SocialNetworksManager
             label.Text = textBlockContent;
             label.Margin = new Thickness(20);
             controlHolder.Children.Add(label);
-        }
-
-        private void Browser_DocumentLoadedInFrameEvent(object sender, DotNetBrowser.Events.FrameLoadEventArgs e)
-        {
-            if (checkRegex.Matches(e.Browser.URL).Count != 0)
-            {
-                Dictionary<String, String> uriParams = NetHelper.GetUriFields(new Uri(e.Browser.URL));
-
-                if (uriParams.ContainsKey("error"))
-                {
-                    parameters["error"] = "true";
-                    CloseWindow();
-                    return;
-                }
-
-                for (int i = 0; i < parameters.Count; i++)
-                {
-                    for (int j = 0; j < uriParams.Count; j++)
-                    {
-                        if (parameters.ContainsKey(uriParams.ElementAt(j).Key))
-                        {
-                            parameters[uriParams.ElementAt(j).Key] = uriParams.ElementAt(j).Value;
-                        }
-                    }
-                }
-
-                CloseWindow();
-            }
         }
 
         public void CloseWindow()

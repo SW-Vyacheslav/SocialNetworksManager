@@ -15,6 +15,9 @@ using SocialNetworksManager.DataPresentation;
 
 using MahApps.Metro.Controls;
 
+using CefSharp;
+using CefSharp.Wpf;
+
 namespace SocialNetworksManager
 {
     [Export(typeof(IApplicationContract))]
@@ -43,11 +46,14 @@ namespace SocialNetworksManager
 
         public MainWindow()
         {
+            Closing += MainWindow_Closing;
+
             InitializeComponent();
             InitializeContainer();
             if (!IsContainerInitialized) pages.IsEnabled = false;
             else RefreshExtensions();
             InitializeThreads();
+            InitializeCef();
         }
 
         #region UsualMethods
@@ -77,6 +83,13 @@ namespace SocialNetworksManager
                 if (Helpers.NetHelper.InternetGetConnectedState(out description, 0)) Dispatcher.Invoke(@delegate, false);
                 else Dispatcher.Invoke(@delegate, true);
             }
+        }
+
+        private void InitializeCef()
+        {
+            CefSettings settings = new CefSettings();
+            settings.CachePath = Environment.CurrentDirectory + "/BrowserCache";
+            Cef.Initialize(settings);
         }
 
         private void InitializeThreads()
@@ -382,6 +395,11 @@ namespace SocialNetworksManager
         #endregion
 
         #region EventMethods
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Cef.Shutdown();
+        }
+
         private void Button_RefreshPhotos_Click(object sender, RoutedEventArgs e)
         {
             if (photos_user_info == null) return;
@@ -409,6 +427,8 @@ namespace SocialNetworksManager
         private void Button_Next_Click(object sender, RoutedEventArgs e)
         {
             if (photos_user_info == null) return;
+
+            photo_size_slider.Value = photo_size_slider.Minimum;
 
             int from_pos = photos_list_items.Count;
 
@@ -585,7 +605,6 @@ namespace SocialNetworksManager
                 img.Height = e.NewValue;
             }
         }
-        #endregion
 
         private void social_network_combobox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -601,7 +620,7 @@ namespace SocialNetworksManager
             {
                 ComboBoxItem selected_soc_net = social_network_combobox.SelectedItem as ComboBoxItem;
 
-                if((String)selected_soc_net.Content == friend_list_item.SocialNetworkName)
+                if ((String)selected_soc_net.Content == friend_list_item.SocialNetworkName)
                 {
                     for (int i = 0; i < user_name_combobox.Items.Count; i++)
                     {
@@ -623,5 +642,6 @@ namespace SocialNetworksManager
                 }
             }
         }
+        #endregion
     }
 }

@@ -113,7 +113,9 @@ namespace SlackExtension
 
             for (int i = 0; i < users_helpers.Count; i++)
             {
-                if (users_helpers[i].Users_Info(applicationContract.GetPhotoUserID()) != null)
+                Responses.SlackUsersInfoResponse usersInfoResponse = users_helpers[i].Users_Info(applicationContract.GetPhotoUserID());
+
+                if (usersInfoResponse.Ok)
                 {
                     slackHelper = users_helpers[i];
                     break;
@@ -168,6 +170,8 @@ namespace SlackExtension
 
                 foreach (Models.SlackChannel channel in channels)
                 {
+                    if (!channel.IsMember) continue;
+
                     GroupsListItem group_item = new GroupsListItem();
                     group_item.GroupName = channel.Name;
                     group_item.SocialNetworkName = getSocialNetworkName();
